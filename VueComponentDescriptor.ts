@@ -3,18 +3,46 @@ const factory = ts.factory
 
 export default class VueComponentDescriptor {
   private name: string = ''
-  components: any = {}
-  data: ts.PropertyAssignment[] = []
-  watchers: any[] = []
-  getters: any[] = []
-  props: any[] = []
+  private data: ts.Node[] = []
+  private components: ts.NodeArray<any> = factory.createNodeArray()
+  private watchers: ts.NodeArray<any> = factory.createNodeArray()
+  private getters: ts.NodeArray<any> = factory.createNodeArray()
+  private props: ts.NodeArray<any> = factory.createNodeArray()
+  private methods: ts.NodeArray<any> = factory.createNodeArray()
+  private otherToken: ts.NodeArray<ts.Node> = factory.createNodeArray()
 
   constructor() {}
 
   setName(newName?: string) {
-    if (newName) {
-      this.name = newName
-    }
+    if (newName) this.name = newName
+  }
+
+  setGetters(getters?: ts.NodeArray<any>) {
+    if (getters) this.getters = getters
+  }
+
+  setData(data?: ts.Node[]) {
+    if (data) this.data = data
+  }
+
+  setWatchers(watchers?: ts.NodeArray<any>) {
+    if (watchers) this.watchers = watchers
+  }
+
+  setProps(props?: ts.NodeArray<any>) {
+    if (props) this.props = props
+  }
+
+  setMethods(methods?: ts.NodeArray<any>) {
+    if (methods) this.methods = methods
+  }
+
+  addOtherTokenMethods(token?: ts.Node) {
+    if (token) this.otherToken = factory.createNodeArray([...this.otherToken, token])
+  }
+
+  setComponents(components?: ts.NodeArray<any>) {
+    if (components) this.components = components
   }
 
   get capitalizedName() {
@@ -24,18 +52,18 @@ export default class VueComponentDescriptor {
   get componentOptions() {
     const assignments: ts.PropertyAssignment[] = [];
 
-    assignments.push(ts.createPropertyAssignment('components', ts.createObjectLiteral(this.components.initializer.properties)));
-    const obj = ts.createObjectLiteral(assignments);
+    assignments.push(ts.createPropertyAssignment('components', ts.createObjectLiteral(this.components)));
+    const obj = factory.createObjectLiteralExpression(assignments);
     return obj;
   }
 
-  get createGetters() {
+  get newComputed() {
     return this.getters.map(getter => {
       return factory.createGetAccessorDeclaration(undefined, undefined, getter.name, [], getter.type, getter.body);
     })
   }
 
-  get createWatchers() {
+  get newWatchers() {
     return this.watchers.map(watcher => {
       const watchParameter = factory.createStringLiteral(watcher.name.text, true)
       const callDecorator = factory.createCallExpression(factory.createIdentifier('Watch'), undefined, [watchParameter])
@@ -47,14 +75,46 @@ export default class VueComponentDescriptor {
     })
   }
 
-  get createData() {
-    return this.data.map(data => {
+  get newData() {
+    return this.data.map((data: any) => {
       if (ts.isAsExpression(data.initializer)) {
         const { type, ...initializer } = data.initializer
         return factory.createPropertyDeclaration([], [], data.name, undefined, type, initializer)
       } else {
-        return factory.createPropertyDeclaration([], [], data.name, undefined, undefined, data.initializer)
+        return factory.createPropertyDeclaration([], [], data.name, undefined, data.type, data.initializer)
       }
+    })
+  }
+
+  get newMethods() {
+    return this.methods
+  }
+
+  get newProps() {
+    return this.props.map(prop => {
+      let typeIdentifier = undefined
+      let propParameter = prop.initializer
+      if (ts.isAsExpression(prop.initializer)) {
+        if (prop.initializer.type.typeName.text === 'PropOptions') {
+          typeIdentifier = prop.initializer.type.typeArguments[0]
+          delete prop.initializer.type
+          propParameter = prop.initializer.expression
+        }
+      } else {
+        const propertyType = prop.initializer.properties.find(attr => attr.name.text.toLowerCase() === 'type')
+        switch (propertyType.initializer.text) {
+          case 'Array':
+            typeIdentifier = factory.createExpressionWithTypeArguments(factory.createIdentifier(propertyType.initializer.text), [factory.createToken(ts.SyntaxKind.AnyKeyword)])
+            break;
+          default:
+            typeIdentifier = factory.createIdentifier(propertyType.initializer.text)
+            break;
+        }
+      }
+      const callDecorator = factory.createCallExpression(factory.createIdentifier('Prop'), undefined, [propParameter])
+      const propDecorator = factory.createDecorator(callDecorator)
+      const modifiers = factory.createModifiersFromModifierFlags(ts.ModifierFlags.Readonly)
+      return factory.createPropertyDeclaration([propDecorator], modifiers, prop.name.text, factory.createToken(ts.SyntaxKind.ExclamationToken), typeIdentifier, undefined)
     })
   }
 
@@ -85,7 +145,7 @@ export default class VueComponentDescriptor {
     const callDecorator = factory.createCallExpression(componentDecorator, [classType], [this.componentOptions])
     const decorator = factory.createDecorator(callDecorator)
 
-    const classMembers: any[] = [this.createData, this.createGetters, this.createWatchers].flat()
+    const classMembers: any[] = [this.newData, this.newProps, this.newComputed, this.newWatchers, this.newMethods, this.otherToken].flat()
     const classNode = ts.createClassDeclaration([decorator], undefined, this.capitalizedName, undefined, [heritageClause], classMembers)
     return classNode
   }

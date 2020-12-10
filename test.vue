@@ -34,6 +34,17 @@ export default Vue.extends({
   name: 'foo',
   components: { BlockDistributor, Header, MainFooter, PageBreadcrumbs, BannerGroup, ListingLoader },
   data () {
+    const isMenuOpen: boolean = false
+    const languages: Array<string> = ['fr', 'en']
+    return {
+      isMenuOpen,
+      languages,
+      listingLoaderType: ListingLoaderType.FILTERED,
+      blocks: [] as Array<Product | BlockSeparator | BlockNativeAd>,
+      showGroupOfBanners: false
+    }
+  },
+  data2 () {
     return {
       listingLoaderType: ListingLoaderType.FILTERED,
       showListingLoader: true,
@@ -48,11 +59,11 @@ export default Vue.extends({
       type: Object,
       default: null
     },
-    toto: {
+    foo: {
       type: Array,
       required: false,
       default: []
-    }
+    } as PropOptions<Array<FAQItem>>,
   },
   watch: {
     $route () {

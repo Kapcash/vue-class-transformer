@@ -1,82 +1,117 @@
-import fs from 'fs'  
+import fs from 'fs'
 import vueCompiler from 'vue-template-compiler'
 import ts from 'typescript'
 import VueComponentDescriptor from './VueComponentDescriptor.js'
+import { AssignedExport } from 'typescript-parser';
 
-// const filePath = path.resolve(_.first(process.argv.slice(2)))
-const filePath = './test.vue'
-const file = fs.readFileSync(filePath, 'utf8') 
+/** Main program */
+function run() {
+  const filePath = process.argv.slice(2)[0]
+  const matchedFileName = filePath.match(/^(?:.*\/)?(.+)\.(vue|ts|js)$/)
+  if (!matchedFileName) { throw Error('Invalid file') }
 
-const sfcFile = vueCompiler.parseComponent(file)
-
-const source = ts.createSourceFile(
-  'inline.ts',
-  sfcFile.script!.content,
-  ts.ScriptTarget.ES2020
-)
+  const componentNameFromFileName = matchedFileName[1]
+  const isVueFile = matchedFileName[2] === 'vue'
   
-const program = ts.createProgram([filePath], {})
-const checker = program.getTypeChecker()
-const printer = ts.createPrinter()
+  let sourceStr = fs.readFileSync(filePath, 'utf8')
+  
+  if (isVueFile) {
+    sourceStr = vueCompiler.parseComponent(sourceStr).script.content
+  }
+  
+  const tsSource = ts.createSourceFile('inline.ts', sourceStr, ts.ScriptTarget.ES2020)
+    
+  const sfcClass = new VueComponentDescriptor()
+  sfcClass.setName(componentNameFromFileName)
 
-const sfcClass = new VueComponentDescriptor()
-sfcClass.setName(filePath.match(/\/(.*)\.vue/)[1])
+  const ast = ts.transform(tsSource, [vueOptionToClassTransformer(sfcClass)])
+  writeOutput(ast)
+}
 
-const sfcVisitor: ts.Visitor = (node: any): ts.VisitResult<ts.Node> => {
-  function extractProperties(dataNode: any): any[] {
-    return dataNode.initializer.properties
+const sfcVisitor = (sfcDescriptor: VueComponentDescriptor): ts.Visitor => (node: ts.NamedDeclaration): ts.VisitResult<ts.Node> => {
+  const extractProperties = (dataNode: ts.PropertyAssignment): ts.NodeArray<any> | null => {
+    if (ts.isObjectLiteralExpression(dataNode.initializer)) {
+      return dataNode.initializer.properties
+    }
+    return null
   }
 
-  switch ((node.name as ts.Identifier)?.text) {
-    case 'name':
-      sfcClass.setName(node.initializer.text)
-      break;
-    case 'data':
-      sfcClass.data = node.body.statements[0].expression.properties
-      break;
-    case 'watch':
-      sfcClass.watchers = extractProperties(node)
-      break;
-    case 'computed':
-      sfcClass.getters = extractProperties(node)
-      break;
-    case 'components':
-      sfcClass.components = node
-      break;
-    default:
-      break;
+  if (ts.isIdentifier(node.name)) {
+    switch (node.name.text) {
+      case 'name':
+        if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.initializer)) {
+          sfcDescriptor.setName(node.initializer.text)
+        }
+        break;
+      case 'data':
+        if (ts.isMethodDeclaration(node)) {
+          const assigments: ts.Node[] = node.body.statements.filter(ts.isVariableStatement).map(assign => assign.declarationList.declarations).flat()
+          const returnStmt = node.body.statements.find(ts.isReturnStatement)
+          if (ts.isObjectLiteralExpression(returnStmt.expression)) {
+            assigments.push(...returnStmt.expression.properties.filter(statement => !ts.isShorthandPropertyAssignment(statement)))
+          }
+          sfcDescriptor.setData(assigments)
+        }
+        break;
+      case 'watch':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setWatchers(extractProperties(node))
+        }
+        break;
+      case 'computed':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setGetters(extractProperties(node))
+        }
+        break;
+      case 'props':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setProps(extractProperties(node))
+        }
+        break;
+      case 'methods':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setMethods(extractProperties(node))
+        }
+        break;
+      case 'components':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setComponents(extractProperties(node))
+        }
+        break;
+      default:
+        sfcDescriptor.addOtherTokenMethods(node)
+        break;
+    }
   }
   return node
 }
 
-const vueOptionToClassTransformer: ts.TransformerFactory<any> = context => {
+const vueOptionToClassTransformer = (sfcDescriptor: VueComponentDescriptor): ts.TransformerFactory<any> => context => {
   const visit: ts.Visitor = (node: any): ts.VisitResult<ts.Node> => {
-    node = ts.visitEachChild(node, visit, context)
-    const isExport = node.kind === ts.SyntaxKind.ExportAssignment
-
-    if (isExport) {
-      const sfcOptions = node.expression.arguments[0]
-
-      const exportNodeExpr = node.expression.expression
-      const isVueExtends = exportNodeExpr.expression?.kind === ts.SyntaxKind.Identifier
+    if (ts.isExportAssignment(node) && ts.isCallExpression(node.expression)) {
+      const exportedMember = node.expression
+      
+      if (ts.isPropertyAccessExpression(exportedMember.expression)) {
+        const exportNodeExpr = exportedMember.expression
+        const isVueExtends = ts.isIdentifier(exportNodeExpr.expression)
         && exportNodeExpr.expression?.text === 'Vue'
-        && exportNodeExpr.name?.kind === ts.SyntaxKind.Identifier
         && exportNodeExpr.name?.text === 'extends'
+        
+        if (isVueExtends) {
+          const sfcOptions = exportedMember.arguments[0]
+          ts.visitEachChild(sfcOptions, sfcVisitor(sfcDescriptor), context)
   
-      if (isVueExtends) {
-        ts.visitEachChild(sfcOptions, sfcVisitor, context)
-        const imports = sfcClass.getImportDecorators()
-        return [imports, sfcClass.toClass()]
+          // TODO Move new import statement to top of the file
+          return [sfcDescriptor.getImportDecorators(), sfcDescriptor.toClass()]
+        }
       }
+    } else {
+      node = ts.visitEachChild(node, visit, context)
     }
     return node
   }
   return node => ts.visitNode(node, visit)
 }
-
-const ast = ts.transform(source, [vueOptionToClassTransformer])
-
-writeOutput(ast)
 
 function writeOutput(ast: ts.TransformationResult<any>) {
   // Create our output folder
@@ -87,7 +122,9 @@ function writeOutput(ast: ts.TransformationResult<any>) {
   
   // Write pretty printed transformed typescript to output directory
   fs.writeFileSync(
-    `${writeOutput}/out.ts`,
-    printer.printFile(ast.transformed[0])
+    './generated/out.ts',
+    ts.createPrinter().printFile(ast.transformed[0])
   )
 }
+
+run()
