@@ -1,3 +1,14 @@
+<i18n>
+{
+  "en": {
+    "showMap": "Map"
+  },
+  "fr": {
+    "showMap": "Carte"
+  }
+}
+</i18n>
+
 <template>
   <div id="favourites">
     <Header />

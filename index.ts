@@ -2,21 +2,45 @@ import fs from 'fs'
 import vueCompiler from 'vue-template-compiler'
 import ts from 'typescript'
 import VueComponentDescriptor from './VueComponentDescriptor.js'
-import { AssignedExport } from 'typescript-parser';
 
 /** Main program */
-function run() {
+function main() {
   const filePath = process.argv.slice(2)[0]
-  const matchedFileName = filePath.match(/^(?:.*\/)?(.+)\.(vue|ts|js)$/)
-  if (!matchedFileName) { throw Error('Invalid file') }
+  if (!fs.existsSync(filePath)) throw new Error('Bad path provided')
 
-  const componentNameFromFileName = matchedFileName[1]
-  const isVueFile = matchedFileName[2] === 'vue'
+  const getFilesFromFolder = (path = "./") => {
+    const entries = fs.readdirSync(path, { withFileTypes: true });
+
+    const files = entries.filter(file => !file.isDirectory()).map(file => `${path}/${file.name}`);
+    const folders = entries.filter(folder => folder.isDirectory());
+
+    for (const folder of folders) {
+      files.push(...getFilesFromFolder(`${path}/${folder.name}`));
+    }
+    return files;
+  }
+
+  if (fs.lstatSync(filePath).isDirectory()) {
+    const files = getFilesFromFolder(filePath)
+    files.forEach(run)
+  } else {
+    run(filePath)
+  };
+}
+
+function run(filePath: string) {
+  const matchedFileName = filePath.match(/^(.*\/)?(.+)\.(vue|ts|js)$/)
+  if (!matchedFileName) { throw Error(`Invalid file: ${filePath}`) }
+
+  const componentNameFromFileName = matchedFileName[2]
+  const isVueFile = matchedFileName[3] === 'vue'
+  const outputFileName = `${matchedFileName[1] || ''}${componentNameFromFileName}.${matchedFileName[3]}`
   
   let sourceStr = fs.readFileSync(filePath, 'utf8')
   
   if (isVueFile) {
-    sourceStr = vueCompiler.parseComponent(sourceStr).script.content
+    var sfc = vueCompiler.parseComponent(sourceStr)
+    sourceStr = sfc.script.content
   }
   
   const tsSource = ts.createSourceFile('inline.ts', sourceStr, ts.ScriptTarget.ES2020)
@@ -25,7 +49,24 @@ function run() {
   sfcClass.setName(componentNameFromFileName)
 
   const ast = ts.transform(tsSource, [vueOptionToClassTransformer(sfcClass)])
-  writeOutput(ast)
+
+  const outputDir = './generated'
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir)
+  }
+
+  fs.writeFileSync(outputFileName, '')
+  
+  if (isVueFile) {
+    sfc.customBlocks.forEach(block => {
+      fs.appendFileSync(outputFileName, `<${block.type}>${block.content}</${block.type}>\n`)
+    })
+    fs.appendFileSync(outputFileName, `<${sfc.template.type}>${sfc.template.content}</${sfc.template.type}>\n`)
+  }
+  fs.appendFileSync(outputFileName, `<script lang="ts">\n${ts.createPrinter().printFile(ast.transformed[0])}\n</script>`)
+  if (isVueFile) {
+    fs.appendFileSync(outputFileName, sfc.styles.map(style => `<${style.type}>\n${style.content}\n</${style.type}>\n`).join('/n'))
+  }
 }
 
 const sfcVisitor = (sfcDescriptor: VueComponentDescriptor): ts.Visitor => (node: ts.NamedDeclaration): ts.VisitResult<ts.Node> => {
@@ -88,6 +129,11 @@ const sfcVisitor = (sfcDescriptor: VueComponentDescriptor): ts.Visitor => (node:
 
 const vueOptionToClassTransformer = (sfcDescriptor: VueComponentDescriptor): ts.TransformerFactory<any> => context => {
   const visit: ts.Visitor = (node: any): ts.VisitResult<ts.Node> => {
+    if (ts.isImportDeclaration(node)) {
+      if (ts.isStringLiteral(node.moduleSpecifier) && (node.moduleSpecifier.text === 'nuxt-property-decorator')) {
+        return null
+      }
+    }
     if (ts.isExportAssignment(node) && ts.isCallExpression(node.expression)) {
       const exportedMember = node.expression
       
@@ -113,18 +159,4 @@ const vueOptionToClassTransformer = (sfcDescriptor: VueComponentDescriptor): ts.
   return node => ts.visitNode(node, visit)
 }
 
-function writeOutput(ast: ts.TransformationResult<any>) {
-  // Create our output folder
-  const outputDir = './generated'
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir)
-  }
-  
-  // Write pretty printed transformed typescript to output directory
-  fs.writeFileSync(
-    './generated/out.ts',
-    ts.createPrinter().printFile(ast.transformed[0])
-  )
-}
-
-run()
+main()

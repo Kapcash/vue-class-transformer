@@ -8,7 +8,7 @@
       "name": "Current TS File",
       "type": "node",
       "request": "launch",
-      "args": ["index.ts", "test.vue"],
+      "args": ["index.ts", "mydir"],
       "runtimeArgs": ["--nolazy", "--loader", "ts-node/esm"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",

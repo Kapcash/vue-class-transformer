@@ -5,6 +5,9 @@
   "author": "Florent Catiau-Tristant (Kapcash)",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "go": "node --loader ts-node/esm index.ts"
+  },
   "dependencies": {
     "@types/node": "^14.14.11",
     "ts-node": "^9.1.1",
