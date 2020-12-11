@@ -5,10 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Current TS File",
+      "name": "test.vue",
       "type": "node",
       "request": "launch",
-      "args": ["index.ts", "mydir"],
+      "args": ["index.ts", "test.vue"],
       "runtimeArgs": ["--nolazy", "--loader", "ts-node/esm"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",

@@ -5,6 +5,8 @@ export default class VueComponentDescriptor {
   private name: string = ''
   private data: ts.Node[] = []
   private components: ts.NodeArray<any> = factory.createNodeArray()
+  private mixins: ts.NodeArray<any> = factory.createNodeArray()
+  private directives: ts.NodeArray<any> = factory.createNodeArray()
   private watchers: ts.NodeArray<any> = factory.createNodeArray()
   private getters: ts.NodeArray<any> = factory.createNodeArray()
   private props: ts.NodeArray<any> = factory.createNodeArray()
@@ -45,6 +47,14 @@ export default class VueComponentDescriptor {
     if (components) this.components = components
   }
 
+  setMixins(mixins?: ts.NodeArray<any>) {
+    if (mixins) this.mixins = mixins
+  }
+
+  setDirectives(directives?: ts.NodeArray<any>) {
+    if (directives) this.directives = directives
+  }
+
   get capitalizedName() {
     return this.name.charAt(0).toUpperCase() + this.name.slice(1)
   }
@@ -52,15 +62,40 @@ export default class VueComponentDescriptor {
   get componentOptions() {
     const assignments: ts.PropertyAssignment[] = [];
 
-    assignments.push(ts.createPropertyAssignment('components', ts.createObjectLiteral(this.components)));
-    const obj = factory.createObjectLiteralExpression(assignments);
-    return obj;
+    if (this.components.length > 0) {
+      assignments.push(ts.createPropertyAssignment('components', ts.createObjectLiteral(this.components)));
+    }
+    if (this.mixins.length > 0) {
+      assignments.push(ts.createPropertyAssignment('mixins', ts.createObjectLiteral(this.mixins)));
+    }
+    if (this.directives.length > 0) {
+      assignments.push(ts.createPropertyAssignment('directives', ts.createObjectLiteral(this.directives)));
+    }
+    const objParameters = assignments.length > 0 ? factory.createObjectLiteralExpression(assignments) : null;
+      
+    return [objParameters].filter(Boolean);
   }
 
   get newComputed() {
     return this.getters.map(getter => {
+      if (ts.isPropertyAssignment(getter) && ts.isObjectLiteralExpression(getter.initializer)) {
+        return getter.initializer.properties.map(prop => {
+          if (ts.isMethodDeclaration(prop)) {
+            const name = ts.isIdentifier(prop.name) && prop.name.text
+            switch (name) {
+              case 'get':
+                return factory.createGetAccessorDeclaration(undefined, undefined, getter.name, [], prop.type, prop.body);
+              case 'set':
+                return factory.createSetAccessorDeclaration(undefined, undefined, getter.name, prop.parameters, prop.body);
+              default:
+                return null
+            }
+          }
+          return null
+        })
+      }
       return factory.createGetAccessorDeclaration(undefined, undefined, getter.name, [], getter.type, getter.body);
-    })
+    }).flat()
   }
 
   get newWatchers() {
@@ -140,13 +175,15 @@ export default class VueComponentDescriptor {
     const extendsExpr = ts.createExpressionWithTypeArguments(undefined, vueSuperClass);
     const heritageClause = factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [extendsExpr]);
 
-    const componentDecorator = factory.createIdentifier('Component')
-    const classType = factory.createTypeReferenceNode(this.capitalizedName, []);
-    const callDecorator = factory.createCallExpression(componentDecorator, [classType], [this.componentOptions])
+    let callDecorator: ts.Identifier | ts.Expression = factory.createIdentifier('Component')
+    if(this.componentOptions.length > 0) {
+      const classType = factory.createTypeReferenceNode(this.capitalizedName, []);
+      callDecorator = factory.createCallExpression(callDecorator, [classType], this.componentOptions)
+    }
     const decorator = factory.createDecorator(callDecorator)
 
     const classMembers: any[] = [this.newData, this.newProps, this.newComputed, this.newWatchers, this.newMethods, this.otherToken].flat()
-    const classNode = ts.createClassDeclaration([decorator], undefined, this.capitalizedName, undefined, [heritageClause], classMembers)
+    const classNode = ts.createClassDeclaration([decorator], factory.createModifiersFromModifierFlags(ts.ModifierFlags.ExportDefault), this.capitalizedName, undefined, [heritageClause], classMembers)
     return classNode
   }
 }

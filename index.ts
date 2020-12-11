@@ -63,9 +63,9 @@ function run(filePath: string) {
     })
     fs.appendFileSync(outputFileName, `<${sfc.template.type}>${sfc.template.content}</${sfc.template.type}>\n`)
   }
-  fs.appendFileSync(outputFileName, `<script lang="ts">\n${ts.createPrinter().printFile(ast.transformed[0])}\n</script>`)
+  fs.appendFileSync(outputFileName, `<script lang="ts">\n${ts.createPrinter().printFile(ast.transformed[0])}</script>\n`)
   if (isVueFile) {
-    fs.appendFileSync(outputFileName, sfc.styles.map(style => `<${style.type}>\n${style.content}\n</${style.type}>\n`).join('/n'))
+    fs.appendFileSync(outputFileName, sfc.styles.map(style => `<${style.type} ${style.lang ? `lang="${style.lang}"` : ''} ${style.scoped ? 'scoped' : ''}>\n${style.content}</${style.type}>\n`).join('/n'))
   }
 }
 
@@ -80,7 +80,7 @@ const sfcVisitor = (sfcDescriptor: VueComponentDescriptor): ts.Visitor => (node:
   if (ts.isIdentifier(node.name)) {
     switch (node.name.text) {
       case 'name':
-        if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.initializer)) {
+        if (ts.isPropertyAssignment(node) && (ts.isIdentifier(node.initializer) || ts.isStringLiteral(node.initializer))) {
           sfcDescriptor.setName(node.initializer.text)
         }
         break;
@@ -119,6 +119,16 @@ const sfcVisitor = (sfcDescriptor: VueComponentDescriptor): ts.Visitor => (node:
           sfcDescriptor.setComponents(extractProperties(node))
         }
         break;
+      case 'mixins':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setMixins(extractProperties(node))
+        }
+        break;
+      case 'directives':
+        if (ts.isPropertyAssignment(node)) {
+          sfcDescriptor.setDirectives(extractProperties(node))
+        }
+        break;
       default:
         sfcDescriptor.addOtherTokenMethods(node)
         break;
@@ -141,7 +151,7 @@ const vueOptionToClassTransformer = (sfcDescriptor: VueComponentDescriptor): ts.
         const exportNodeExpr = exportedMember.expression
         const isVueExtends = ts.isIdentifier(exportNodeExpr.expression)
         && exportNodeExpr.expression?.text === 'Vue'
-        && exportNodeExpr.name?.text === 'extends'
+        && exportNodeExpr.name?.text === 'extend'
         
         if (isVueExtends) {
           const sfcOptions = exportedMember.arguments[0]

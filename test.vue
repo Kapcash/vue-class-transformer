@@ -1,130 +1,149 @@
 <i18n>
 {
   "en": {
-    "showMap": "Map"
+    "reset": "Reset",
+    "confirm-password": "Confirm your new password",
+    "reset-your-password": "Reset your password",
+    "type-your-password": "Please provide a new password below. Make sure that the password contains at least 6 characters:",
+    "errors": {
+      "password-does-not-match": "The passwords must match",
+      "server": "There has been an error with the server, please try again later"
+    },
+    "success": "Your password has been reset",
+    "return": "Back to site"
   },
   "fr": {
-    "showMap": "Carte"
+    "reset": "Réinitialiser",
+    "reset-your-password": "Réinitialisez votre mot de passe",
+    "confirm-password": "Confirmez votre mot de passe",
+    "type-your-password": "Saississez un nouveau mot de passe ci-dessous. Assurez-vous qu'il contienne au moins 6 caractères :",
+    "errors": {
+      "password-does-not-match": "Le mot de passe ne correspond pas",
+      "server": "Erreur avec le serveur, veuillez réessayer plus tard"
+    },
+    "success": "Votre mot de passe à été réinitialisé",
+    "return": "Retour au site"
   }
 }
 </i18n>
-
 <template>
-  <div id="favourites">
-    <Header />
-    <v-container class="product-list-container">
-      <page-breadcrumbs v-show="$vuetify.breakpoint.smAndUp" />
-      <transition name="vrc-fade">
-        <listing-loader v-if="showListingLoader" :type="listingLoaderType" />
-      </transition>
-      <block-distributor :blocks="blocks" :initial-products="6" :show-advantages="true" :gtm-listing-code="gtmListingCode" :show-ads="true" />
-      <banner-group v-if="showGroupOfBanners" />
-    </v-container>
-    <main-footer />
-  </div>
+<v-dialog v-model="isOpen" width="500px" persistent content-class="reset-password-modal">
+  <v-card>
+    <v-img class="logo" :src="require('~/assets/img/shared/logo_en.png')" />
+    <v-btn class="close" fab small color="primary" @click="close">
+      <v-icon>
+        mdi-close
+      </v-icon>
+    </v-btn>
+    <v-window v-model="window">
+      <v-window-item :key="0" eager>
+        <v-img class="lock" :src="require('~/assets/img/shared/reset-password-lock.png')" position="-115px 0px" width="25%" :height="80" />
+        <p class="primary--text">
+          {{ $t('reset-your-password') }}
+        </p>
+        <p>
+          {{ $t('type-your-password') }}
+        </p>
+        <v-form ref="form" v-model="isFormValid" @submit.prevent="updatePassword(newPassword)">
+          <password-field class="field" :shared-scope="false" register-mode @update:scope="newPassword = $event" />
+          <div style="position:relative">
+            <password-field
+              class="field"
+              register-mode
+              :shared-scope="false"
+              :label="$t('confirm-password')"
+              no-tooltip
+              @update:scope="confirmedPassword = $event"
+            />
+            <tooltip :message="$t('errors.password-does-not-match')" :is-active="!arePasswordsEquals" />
+          </div>
+          <div style="position:relative">
+            <v-btn block color="primary" type="submit" class="submit" :disabled="!arePasswordsEquals || !isFormValid || !arePasswordsFilled">
+              {{ $t('reset') }}
+            </v-btn>
+            <tooltip :message="$t('errors.server')" :is-active="showServerTooltip" />
+          </div>
+        </v-form>
+      </v-window-item>
+      <v-window-item :key="1">
+        <v-img class="lock" :src="require('~/assets/img/shared/reset-password-lock.png')" position="-10px 0px" width="25%" :height="80" />
+        <p class="primary--text">
+          {{ $t('success') }}
+        </p>
+        <v-btn block color="primary" type="submit" class="submit" @click="close">
+          {{ $t('return') }}
+        </v-btn>
+      </v-window-item>
+    </v-window>
+  </v-card>
+</v-dialog>
 </template>
-
 <script lang="ts">
-import {Vue} from 'nuxt-property-decorator'
-import Header from '../components/shared/header/header.vue'
-import MainFooter from '../components/shared/footer/footer.vue'
-import BlockDistributor from '~/components/shared/product-item/block-distributor.vue'
-import PageBreadcrumbs from '~/components/shared/breadcrumbs.vue'
-import BannerGroup from '~/components/listings/banner-group.vue'
-import ListingLoader from '~/components/listings/listing-loader.vue'
-import {Publishable} from '~/plugins/vrc-api-client/src/model/publishable'
-import {Product} from '~/plugins/vrc-api-client/src/model/product'
-import {ProductsDistribution} from '~/model/products'
-import {GTMListing} from '~/plugins/events-manager/src/model/google-tag-manager'
-import {ListingLoaderType} from '~/model/listing-loader'
-import {BlockSeparator} from '~/model/block-separator'
-import {BlockNativeAd} from '~/model/block-native-ad'
-import PublishingFilterEnum = Publishable.PublishingFilterEnum
+import Vue from "vue";
+import PasswordField from "~/components/login/fields/password-field.vue";
+import Tooltip from "~/components/login/tooltip.vue";
+import { Vue, Component } from 'nuxt-property-decorator';
 
-export default Vue.extends({
-  name: 'foo',
-  components: { BlockDistributor, Header, MainFooter, PageBreadcrumbs, BannerGroup, ListingLoader },
-  data () {
-    const isMenuOpen: boolean = false
-    const languages: Array<string> = ['fr', 'en']
-    return {
-      isMenuOpen,
-      languages,
-      listingLoaderType: ListingLoaderType.FILTERED,
-      blocks: [] as Array<Product | BlockSeparator | BlockNativeAd>,
-      showGroupOfBanners: false
+@Component
+export default class ResetPasswordModal extends Vue {
+    isOpen: boolean = this.$store.state.modals.isResetPasswordActive;
+    newPassword: string = "";
+    confirmedPassword: string = "";
+    isFormValid: boolean = false;
+    showServerTooltip: boolean = false;
+    watcher: () => void = () => { };
+    window: number = 0;
+    get arePasswordsEquals(): boolean {
+        return this.newPassword === this.confirmedPassword;
     }
-  },
-  data2 () {
-    return {
-      listingLoaderType: ListingLoaderType.FILTERED,
-      showListingLoader: true,
-      blocks: [] as Array<Product | BlockSeparator | BlockNativeAd>,
-      productsDistribution: ProductsDistribution.DOUBLE,
-      gtmListingCode: GTMListing.FAVOURITES,
-      showGroupOfBanners: false
+    set arePasswordsEquals(val) {
+        return val;
     }
-  },
-  props: {
-    error: {
-      type: Object,
-      default: null
-    },
-    foo: {
-      type: Array,
-      required: false,
-      default: []
-    } as PropOptions<Array<FAQItem>>,
-  },
-  watch: {
-    $route () {
-      this.getFavouriteProducts()
-    },
-    foo (newVal, oldVal: string) {
-      console.log('test')
+    get arePasswordsFilled(): boolean {
+        return this.newPassword !== "" && this.confirmedPassword !== "";
     }
-  },
-  computed: {
-    toto (): string {
-      return 'lol'
+    async updatePassword(newPassword: string): Promise<void> {
+        this.showServerTooltip = false;
+        try {
+            await this.$vrc().accounts().updateAccount({ password: newPassword });
+            this.$store.commit("user/SET_PROFILE_PROPERTY", { property: "password", newValue: newPassword });
+            this.window = 1;
+        }
+        catch (error) {
+            this.showServerTooltip = true;
+            console.error(error);
+        }
     }
-  },
-  mounted () {
-    this.getFavouriteProducts()
-  },
-  methods: {
-    async getFavouriteProducts () {
-      try {
-        this.$nextTick(() => { this.showListingLoader = true })
-        this.blocks = []
-        const favourites = await this.$vrc().users().favourites(PublishingFilterEnum.ANY, this.$criterions().getProductListFilter())
-        this.blocks = this.$blocks().addNeededBlocks(favourites.published.concat(favourites.tonight).concat(favourites.planned).concat(favourites.expired))
-        this.showListingLoader = false
-        this.showGroupOfBanners = this.blocks.length === 0
-        this.$store.commit('criterion/SET_VISIBLE', {
-          thematics: favourites.thematics,
-          labels: favourites.labels,
-          destinations: favourites.destinations,
-          language: this.$store.state.user.profile.language
-        })
-        this.$UtilsMixin().scrollToTop()
-        await this.$map().setMapMarkers(this.blocks)
-      } catch (err) {
-        this.showListingLoader = false
-        this.showGroupOfBanners = true
-        await this.$map().setMapMarkers([])
-        console.error('getFavouriteProducts \n', err)
-      }
+    close(): void {
+        this.$store.commit("modals/SET_RESET_PASSWORD_ACTIVE", false);
+        this.$router.replace({ path: "/" });
     }
-  },
-  head () {
-    return {
-      title: `${this.$t('meta.default.title')}`,
-      meta: [
-        { hid: 'robots', name: 'robots', content: 'noindex, follow' },
-        { hid: 'description', name: 'description', content: `${this.$t('meta.default.description')}` }
-      ]
+    created() {
+        this.watcher = this.$store.watch(() => this.$store.state.modals.isResetPasswordActive, (newVal: boolean) => {
+            this.isOpen = newVal;
+        });
     }
-  }
-})
+}
 </script>
+<style lang="sass" scoped>
+
+.v-dialog__content::v-deep
+  .v-dialog
+    overflow-y: visible
+    position: absolute
+    top: 10%
+    .v-card
+      text-align: center
+      padding: 40px 75px
+      .submit
+        margin: 30px 0 0 0
+      .logo
+        width: 70%
+        margin: 0 auto
+      .close
+        right: -20px
+        top: -20px
+        position: absolute
+      .lock
+        margin: 20px auto
+</style>
