@@ -2,9 +2,8 @@ import Strategy from './Strategy.js';
 import ts from 'typescript'
 const factory = ts.factory
 
-@Strategy
-export default class WatchStrategy {
-  static transform (watcher: ts.ObjectLiteralElementLike): ts.MethodDeclaration | null {
+export default class WatchStrategy implements Strategy {
+  transform (watcher: ts.ObjectLiteralElementLike): ts.MethodDeclaration | null {
     if (ts.isIdentifier(watcher.name) || ts.isStringLiteral(watcher.name)) {
       const watchParameter = factory.createStringLiteral(watcher.name.text, true)
       const callDecorator = factory.createCallExpression(factory.createIdentifier('Watch'), undefined, [watchParameter])

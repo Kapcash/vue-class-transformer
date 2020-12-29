@@ -13,12 +13,13 @@ import { AttributeToken, SFCToken } from 'global.js';
 // Arguments parsing
 const argPath = process.argv.slice(2)[0]
 const OUTPUT_DIR = './generated/'
-const overrideFiles: boolean = true
+const overrideFiles: boolean = false
+const isNuxtLibrary: boolean = true
 const sfcOrder: SFCToken[] = ['script', 'template', 'styles', 'other']
 const propertiesOrder: AttributeToken[] = ['data', 'watcher', 'props', 'hooks', 'methods', 'computed', 'other']
 
 // Build related strategies
-const componentBuilder = new VuePropertyDecoratorBuilder()
+const componentBuilder = new VuePropertyDecoratorBuilder(isNuxtLibrary)
 const director = new ComponentDirector(componentBuilder, propertiesOrder)
 
 const vueFilesToUpgrade: FileDescriptor[] = getAllFilesToUpgrade(argPath)
@@ -35,7 +36,7 @@ function upgradeComponent(vueFile: FileDescriptor) {
   componentBuilder.setDescriptor(vueDescriptor)
   const sourceScript = director.build()
 
-  const outputPath = overrideFiles ? `${OUTPUT_DIR}${vueFile.nameWithExtension}` : vueFile.fullPath
+  const outputPath = overrideFiles ? vueFile.fullPath : `${OUTPUT_DIR}${vueFile.nameWithExtension}`
   const sfcBuilder = new VueSfcBuilder(outputPath, sfc, sourceScript)
   const sfcDirector = new SfcDirector(sfcBuilder, sfcOrder)
   sfcDirector.buildCustomBlockAtEnd()

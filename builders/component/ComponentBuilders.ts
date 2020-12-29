@@ -7,22 +7,29 @@ import DataStrategy from "../../strategies/DataStrategy.js";
 import MethodStrategy from "../../strategies/MethodStrategy.js";
 import WatchStrategy from "../../strategies/WatchStrategy.js";
 import OtherTokenStrategy from "../../strategies/OtherTokenStrategy.js";
+import ImportStrategy from "../../strategies/ImportStrategy.js";
 import { Alias } from "../../global.js";
 
-export interface ComponentBuilder {
-  createImports(): ComponentBuilder;
-  createClassComponent(): ComponentBuilder;
-  createProperties(): ComponentBuilder;
-  createData(): ComponentBuilder;
-  createComputed(): ComponentBuilder;
-  createHooks(): ComponentBuilder;
-  createMethods(): ComponentBuilder;
-  createWatchers(): ComponentBuilder;
-  createLeft(): ComponentBuilder;
-  buildSourceScript(): ts.SourceFile;
+export abstract class ComponentBuilder {
+  protected libraryName: string = ''
+
+  constructor(isNuxt = false) {
+    this.libraryName = `${isNuxt ? 'nuxt' : 'vue'}-property-decorator`
+  }
+
+  abstract createImports(): ComponentBuilder;
+  abstract createClassComponent(): ComponentBuilder;
+  abstract createProperties(): ComponentBuilder;
+  abstract createData(): ComponentBuilder;
+  abstract createComputed(): ComponentBuilder;
+  abstract createHooks(): ComponentBuilder;
+  abstract createMethods(): ComponentBuilder;
+  abstract createWatchers(): ComponentBuilder;
+  abstract createLeft(): ComponentBuilder;
+  abstract buildSourceScript(): ts.SourceFile;
 }
 
-export class VuePropertyDecoratorBuilder implements ComponentBuilder {
+export class VuePropertyDecoratorBuilder extends ComponentBuilder {
   private _componentDescriptor: VueComponentDescriptor | null = null
   private classMembers: ts.ClassElement[] = []
   private sourceStatements: ts.Statement[] = []
@@ -37,15 +44,40 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   }
   
   createImports() {
-    this.sourceStatements.push(...this.getComponentDescriptor().imports)
+    const { imports } = this.getComponentDescriptor()
+    
+    const filteredImports = imports.map(imprt => {
+      return new ImportStrategy().transform(imprt)
+    }).filter(Boolean)
+    
+    this.sourceStatements.push(this.newImportDeclaration, ...filteredImports)
     return this
+  }
+
+  get newImportDeclaration () {
+    const { watchers, props } = this.getComponentDescriptor()
+
+    const decoratorImports: ts.ImportSpecifier[] = [
+      factory.createImportSpecifier(undefined, factory.createIdentifier('Vue')),
+      factory.createImportSpecifier(undefined, factory.createIdentifier('Component'))
+    ]
+  
+    if (watchers.length > 0) {
+      decoratorImports.push(factory.createImportSpecifier(undefined, factory.createIdentifier('Watch')))
+    }
+    if (props.length > 0) {
+      decoratorImports.push(factory.createImportSpecifier(undefined, factory.createIdentifier('Prop')))
+    }
+    
+    const importClauses = factory.createImportClause(false, undefined, factory.createNamedImports(decoratorImports))
+    return factory.createImportDeclaration(undefined, undefined, importClauses, factory.createStringLiteral(this.libraryName, true))
   }
   
   @Alias('props')
   createProperties() {
     const props = this.getComponentDescriptor().props
     const newProps = props.map(prop => {
-      return PropertyStrategy.transform(prop)
+      return new PropertyStrategy().transform(prop)
     }).flat()
     this.classMembers.push(...newProps)
     return this
@@ -59,7 +91,7 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   @Alias('data')
   createData() {
     const newData = this.getComponentDescriptor().data.map((data) => {
-      return DataStrategy.transform(data)
+      return new DataStrategy().transform(data)
     })
     this.classMembers.push(...newData)
     return this
@@ -68,7 +100,7 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   @Alias('computed')
   createComputed() {
     const computed = this.getComponentDescriptor().getters.map(computed => {
-      return ComputedStrategy.transform(computed)
+      return new ComputedStrategy().transform(computed)
     }).flat()
     this.classMembers.push(...computed)
     return this
@@ -77,7 +109,7 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   @Alias('methods')
   createMethods() {
     const methods = this.getComponentDescriptor().methods.map(method => {
-      return MethodStrategy.transform(method)
+      return new MethodStrategy().transform(method)
     })
     this.classMembers.push(...methods)
     return this
@@ -86,7 +118,7 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   @Alias('watcher')
   createWatchers() {
     const watchers = this.getComponentDescriptor().watchers.map((watcher) => {
-      return WatchStrategy.transform(watcher)
+      return new WatchStrategy().transform(watcher)
     })
     this.classMembers.push(...watchers)
     return this
@@ -95,7 +127,7 @@ export class VuePropertyDecoratorBuilder implements ComponentBuilder {
   @Alias('other')
   createLeft() {
     const otherTokens = this.getComponentDescriptor().otherToken.map(token => {
-      return OtherTokenStrategy.transform(token)
+      return new OtherTokenStrategy().transform(token)
     })
     this.classMembers.push(...otherTokens.filter(ts.isMethodDeclaration))
     // const otherProperties: ts.PropertyDeclaration[] = otherTokens

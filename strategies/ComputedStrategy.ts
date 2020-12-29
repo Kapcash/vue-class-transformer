@@ -2,9 +2,8 @@ import Strategy from './Strategy.js';
 import ts from 'typescript'
 const factory = ts.factory
 
-@Strategy
-export default class ComputedStrategy {
-  static transform(computed: ts.Node): ts.AccessorDeclaration[] | null {
+export default class ComputedStrategy implements Strategy {
+  transform(computed: ts.Node): ts.AccessorDeclaration[] | null {
     if (ts.isPropertyAssignment(computed) && ts.isObjectLiteralExpression(computed.initializer)) {
       return computed.initializer.properties.map(prop => {
         if (ts.isMethodDeclaration(prop)) {

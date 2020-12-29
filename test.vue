@@ -75,7 +75,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import PasswordField from '~/components/login/fields/password-field.vue'
+import Vue, { Other } from 'vue'
+import { PasswordField, Test } from '~/components/login/fields/password-field.vue'
 import Tooltip from '~/components/login/tooltip.vue'
 
 export default Vue.extend({

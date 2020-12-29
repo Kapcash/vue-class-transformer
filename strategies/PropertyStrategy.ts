@@ -2,9 +2,8 @@ import Strategy from './Strategy.js';
 import ts from 'typescript'
 const factory = ts.factory
 
-@Strategy
-export default class PropertyStrategy {
-  static transform (prop: ts.PropertyAssignment): ts.PropertyDeclaration | null {
+export default class PropertyStrategy implements Strategy {
+  transform (prop: ts.PropertyAssignment): ts.PropertyDeclaration | null {
     const propName = ts.isIdentifier(prop.name) ? prop.name.text : ''
 
     let typeIdentifier: ts.TypeNode = undefined

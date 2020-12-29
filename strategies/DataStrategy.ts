@@ -2,9 +2,8 @@ import Strategy from './Strategy.js';
 import ts from 'typescript'
 const factory = ts.factory
 
-@Strategy
-export default class DataStrategy {
-  static transform (data: any): ts.PropertyDeclaration | null {
+export default class DataStrategy implements Strategy {
+  transform (data: any): ts.PropertyDeclaration | null {
     if (ts.isAsExpression(data.initializer)) {
       const { type, ...initializer } = data.initializer
       return factory.createPropertyDeclaration([], [], data.name, undefined, type, initializer)
