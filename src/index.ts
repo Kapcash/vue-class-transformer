@@ -1,5 +1,5 @@
-import { RuntimeConfiguration } from './types';
 import ts from 'typescript'
+import { RuntimeConfiguration } from './types';
 import { getAllFilesToUpgrade, FileDescriptor, getSfcDescriptor, extractScriptFromSfc } from './FileReader.js';
 import { sourceExtractor } from './extractors/NodeExtractor.js'
 import { parseArguments, printHelp } from './ArgumentParser.js';
@@ -37,6 +37,7 @@ function upgradeComponent(vueFile: FileDescriptor) {
 
   const sfc = getSfcDescriptor(vueFile)
   const tsSource = extractScriptFromSfc(sfc)
+  // For every first level child in the source, we extract all the info we need
   ts.forEachChild(tsSource, sourceExtractor(vueDescriptor))
 
   componentBuilder.setDescriptor(vueDescriptor)

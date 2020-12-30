@@ -18,7 +18,7 @@
       "type": "node",
       "request": "launch",
       "args": ["index.ts", "${relativeFile}"],
-      "runtimeArgs": ["--nolazy", "--loader", "ts-node/esm"],
+      "runtimeArgs": ["--experimental-json-modules", "--nolazy", "--loader", "ts-node/esm"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
     },

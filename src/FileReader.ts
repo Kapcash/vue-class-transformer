@@ -12,7 +12,7 @@ function isVueFile(filePath: string): boolean {
  * @param path The file or folder path
  * @return All the files present in the folder and its sub-folder, or the file if it's not a folder
  */
-function getFilesFromFolder (path = "./") {
+function getFilesFromFolder (path = ".") {
   const entries = fs.readdirSync(path, { withFileTypes: true });
 
   const vueFiles = entries
@@ -40,6 +40,7 @@ function getAllFilesPaths (fileOrFolderPath): string[] {
 }
 
 export function getAllFilesToUpgrade (path: string): FileDescriptor[] {
+  path = `${process.cwd()}/${path}`
   return getAllFilesPaths(path)
     .map(path => new FileDescriptor(path))
     .filter(file => !!file)
