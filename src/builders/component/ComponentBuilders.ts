@@ -2,13 +2,13 @@ import ts from "typescript";
 const factory = ts.factory
 import PropertyStrategy from "../../strategies/PropertyStrategy.js";
 import ComputedStrategy from "../../strategies/ComputedStrategy.js";
-import VueComponentDescriptor from "../../VueComponentDescriptor.js";
+import VueComponentDescriptor from "../../extractors/VueComponentDescriptor.js";
 import DataStrategy from "../../strategies/DataStrategy.js";
 import MethodStrategy from "../../strategies/MethodStrategy.js";
 import WatchStrategy from "../../strategies/WatchStrategy.js";
 import OtherTokenStrategy from "../../strategies/OtherTokenStrategy.js";
 import ImportStrategy from "../../strategies/ImportStrategy.js";
-import { Alias } from "../../types.js";
+import { Alias } from "../../global.js";
 
 export abstract class ComponentBuilder {
   protected libraryName: string = ''

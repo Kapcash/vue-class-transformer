@@ -7,14 +7,3 @@ export function Alias(parameter: AttributeToken | SFCToken) {
   }
 }
 
-export interface Configuration {
-  overrideFiles: boolean;
-  isNuxt: boolean;
-  outputDir: string;
-  sfcOrder: SFCToken[];
-  propertiesOrder: AttributeToken[];
-}
-
-export interface RuntimeConfiguration extends Configuration {
-  inputPath: string;
-}

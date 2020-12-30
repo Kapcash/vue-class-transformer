@@ -1,9 +1,20 @@
 import minimist from 'minimist'
 import chalk from 'chalk';
-import packageConfig from '../package.json';
-import { SFCToken, AttributeToken, Configuration, RuntimeConfiguration } from './types.js';
-
+import { AttributeToken, SFCToken } from '../global.js';
+import packageConfig from '../../package.json';
 const { version, homepage } = packageConfig
+
+export interface Configuration {
+  overrideFiles: boolean;
+  isNuxt: boolean;
+  outputDir: string;
+  sfcOrder: SFCToken[];
+  propertiesOrder: AttributeToken[];
+}
+
+export interface RuntimeConfiguration extends Configuration {
+  inputPath: string;
+}
 
 export async function parseArguments(args): Promise<RuntimeConfiguration> {
   // Arguments parsing

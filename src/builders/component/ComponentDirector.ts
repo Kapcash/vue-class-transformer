@@ -1,4 +1,4 @@
-import { AttributeToken } from "../../types.js";
+import { AttributeToken } from "../../global.js";
 import { ComponentBuilder } from "./ComponentBuilders.js"
 
 export default class ComponentDirector {

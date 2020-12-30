@@ -1,9 +1,8 @@
 import ts from 'typescript'
-import { RuntimeConfiguration } from './types';
-import { getAllFilesToUpgrade, FileDescriptor, getSfcDescriptor, extractScriptFromSfc } from './FileReader.js';
+import { getAllFilesToUpgrade, FileDescriptor, getSfcDescriptor, extractScriptFromSfc } from './helpers/FileReader.js';
 import { sourceExtractor } from './extractors/NodeExtractor.js'
-import { parseArguments, printHelp } from './ArgumentParser.js';
-import VueComponentDescriptor from './VueComponentDescriptor.js'
+import { parseArguments, printHelp, RuntimeConfiguration } from './helpers/ArgumentParser.js';
+import VueComponentDescriptor from './extractors/VueComponentDescriptor.js'
 import VueSfcBuilder from './builders/sfc/SfcBuilders.js';
 import VuePropertyDecoratorBuilder from './builders/component/ComponentBuilders.js';
 import ComponentDirector from './builders/component/ComponentDirector.js';
