@@ -3,7 +3,7 @@ import { dirname } from "path";
 import mkdirp from 'mkdirp'
 import ts from "typescript";
 import { SFCDescriptor } from "vue-template-compiler";
-import { Alias } from "../../global.js";
+import { Alias } from "../../types.js";
 
 export interface SfcBuilder {
   createTemplate(): void;

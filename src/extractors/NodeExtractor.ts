@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import VueComponentDescriptor from 'VueComponentDescriptor';
+import VueComponentDescriptor from 'src/VueComponentDescriptor';
 import { getVueOptions } from './SourceExtractor.js'
 
 export const sourceExtractor = (vueDescriptor: VueComponentDescriptor) => (node: ts.Node) => {

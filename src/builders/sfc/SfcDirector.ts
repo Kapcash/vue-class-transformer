@@ -1,4 +1,4 @@
-import { SFCToken } from './../../global';
+import { SFCToken } from 'src/types.js';
 import { SfcBuilder } from "./SfcBuilders.js";
 
 export default class SfcDirector {

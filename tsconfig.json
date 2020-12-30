@@ -4,6 +4,7 @@
     "module": "esnext",
     "lib": ["es2019"],
     "outDir": "dist",
+    "resolveJsonModule": true,
     "allowJs": true,
     "strict": false,
     "esModuleInterop": true,

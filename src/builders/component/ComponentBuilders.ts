@@ -8,7 +8,7 @@ import MethodStrategy from "../../strategies/MethodStrategy.js";
 import WatchStrategy from "../../strategies/WatchStrategy.js";
 import OtherTokenStrategy from "../../strategies/OtherTokenStrategy.js";
 import ImportStrategy from "../../strategies/ImportStrategy.js";
-import { Alias } from "../../global.js";
+import { Alias } from "../../types.js";
 
 export abstract class ComponentBuilder {
   protected libraryName: string = ''
@@ -29,7 +29,7 @@ export abstract class ComponentBuilder {
   abstract buildSourceScript(): ts.SourceFile;
 }
 
-export class VuePropertyDecoratorBuilder extends ComponentBuilder {
+export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
   private _componentDescriptor: VueComponentDescriptor | null = null
   private classMembers: ts.ClassElement[] = []
   private sourceStatements: ts.Statement[] = []
