@@ -1,20 +1,25 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "module": "esnext",
     "lib": ["es2019"],
+    "module": "esnext",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "outDir": "dist",
-    "allowJs": false,
     "strict": false,
+    "allowJs": false,
+    "sourceMap": false,
+    "removeComments": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
     "experimentalDecorators": true,
     "types": [
       "@types/node"
     ]
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",

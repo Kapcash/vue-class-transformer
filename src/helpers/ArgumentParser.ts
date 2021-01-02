@@ -1,8 +1,6 @@
 import minimist from 'minimist'
 import chalk from 'chalk';
 import { AttributeToken, SFCToken } from '../global.js';
-import packageConfig from '../../package.json';
-const { version, homepage } = packageConfig
 
 export interface Configuration {
   overrideFiles: boolean;
@@ -72,7 +70,6 @@ export async function parseArguments(args): Promise<RuntimeConfiguration> {
 
 export function printHelp() {
   const info = console.log;
-  info(chalk.yellow(`Version ${version}`))
   info(`${chalk.bold('Syntax:')}   vts [options] [file|folder path]`)
   
   info('')
@@ -92,5 +89,5 @@ export function printHelp() {
   
   info('')
 
-  info(`See the github README.md for more information: ${homepage}`)
+  info(`See the github README.md for more information: https://github.com/Kapcash/vue-typescript-converter#readme`)
 }
