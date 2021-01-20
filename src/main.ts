@@ -21,10 +21,9 @@ export function upgradeComponent(config: Configuration) {
 
 /** Convert the given SFC descriptor's script */
 export function convertScript(config: Configuration, sfc: SFCDescriptor): string {
-  const vueDescriptor = new VueComponentDescriptor()
-
   const tsSource = extractScriptFromSfc(sfc)
-
+  
+  const vueDescriptor = new VueComponentDescriptor()
   // For every first level child in the source, we extract all the info we need
   ts.forEachChild(tsSource, sourceExtractor(vueDescriptor))
   

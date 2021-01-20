@@ -15,7 +15,8 @@
     "allowSyntheticDefaultImports": true,
     "types": [
       "@types/node",
-      "@types/jest"
+      "@types/jest",
+      "@types/glob"
     ],
   },
   "include": [

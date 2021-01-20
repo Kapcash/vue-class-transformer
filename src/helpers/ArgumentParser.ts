@@ -11,7 +11,7 @@ export interface Configuration {
 }
 
 export interface RuntimeConfiguration extends Configuration {
-  inputPath: string;
+  inputPaths: string[];
 }
 
 export async function parseArguments(args): Promise<RuntimeConfiguration> {
@@ -56,13 +56,13 @@ export async function parseArguments(args): Promise<RuntimeConfiguration> {
     }
   }
   
-  const inputPath = argPath[0]
+  const inputPaths = argPath
   const outputDir = options.outputDir.endsWith('/') ? options.outputDir : `${options.outputDir}/`
 
   const runtimeConfig: RuntimeConfiguration = {
     ...options,
     outputDir,
-    inputPath,
+    inputPaths,
   }
   
   return runtimeConfig;
