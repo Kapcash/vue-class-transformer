@@ -1,11 +1,10 @@
 import fs from "fs"
-import { dirname } from "path";
-import mkdirp from 'mkdirp'
-import ts from "typescript";
-import { SFCDescriptor } from "vue-template-compiler";
-import { Alias } from "../../global.js";
+import ts from 'typescript';
+import { SFCDescriptor } from 'vue-template-compiler';
+import { Alias } from '../../global';
 
 export interface SfcBuilder {
+  sfc: string;
   createTemplate(): void;
   createScript(): void;
   createStyles(): void;
@@ -13,40 +12,44 @@ export interface SfcBuilder {
 }
 
 export default class VueSfcBuilder implements SfcBuilder {
+  private fileStringLiterals: string[] = []
+
   constructor(
-    private outputPath: string,
     private sfcDescriptor: SFCDescriptor | null,
     private scriptSource: ts.SourceFile | null,
   ) {
-    this.createFileAndFolders(outputPath)
   }
 
-  private createFileAndFolders(filePath: string) {
-    mkdirp.sync(dirname(filePath))
-    fs.writeFileSync(filePath, '');
+  get sfc(): string {
+    return this.fileStringLiterals.join('\n')
   }
 
   @Alias('template')
   createTemplate(): void {
-    fs.appendFileSync(this.outputPath, `<${this.sfcDescriptor.template.type}>${this.sfcDescriptor.template.content}</${this.sfcDescriptor.template.type}>\n`)
+    this.fileStringLiterals.push(`<${this.sfcDescriptor.template.type}>${this.sfcDescriptor.template.content}</${this.sfcDescriptor.template.type}>`)
   }
   
   @Alias('script')
   createScript(): void {
     const scriptSrc = ts.createPrinter().printFile(this.scriptSource)
-      fs.appendFileSync(this.outputPath, `<script lang="ts">\n${scriptSrc}</script>\n`)
+    this.fileStringLiterals.push(`<script lang="ts">\n${scriptSrc}</script>`)
   }
 
   @Alias('styles')
   createStyles(): void {
-    fs.appendFileSync(this.outputPath, this.sfcDescriptor.styles.map(style => `<${style.type} ${style.lang ? `lang="${style.lang}"` : ''} ${style.scoped ? 'scoped' : ''}>\n${style.content}</${style.type}>\n`).join('/n'))
+    const styles = this.sfcDescriptor.styles.forEach((style) => {
+      const lang = style.lang ? `lang="${style.lang}"` : ''
+      const scoped = style.scoped ? 'scoped' : ''
+      const styleBlock = `<${style.type} ${lang} ${scoped}>\n${style.content}</${style.type}>\n`
+      this.fileStringLiterals.push(styleBlock)
+    })
   }
 
   @Alias('other')
   createCustomBlocks(): void {
     this.sfcDescriptor.customBlocks.forEach(block => {
       const attrs = Object.entries(block.attrs).map(([key, val]) => `${key}="${val}"`).join(' ')
-      fs.appendFileSync(this.outputPath, `<${block.type} ${attrs}>${block.content}</${block.type}>\n`)
+      this.fileStringLiterals.push(`<${block.type} ${attrs}>${block.content}</${block.type}>`)
     })
   }
 }

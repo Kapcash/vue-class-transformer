@@ -1,5 +1,5 @@
-import { SFCToken } from "../../global.js";
-import { SfcBuilder } from "./SfcBuilders.js";
+import { SFCToken } from '../../global';
+import { SfcBuilder } from './SfcBuilders';
 
 export default class SfcDirector {
   private builder: SfcBuilder;
@@ -16,10 +16,11 @@ export default class SfcDirector {
     })
   }
 
-  public buildCustomBlockAtEnd(): void {
+  public buildCustomBlockAtEnd() {
     this.builder.createTemplate();
     this.builder.createScript();
     this.builder.createStyles();
     this.builder.createCustomBlocks();
+    return this.builder.sfc
   }
 }

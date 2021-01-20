@@ -5,11 +5,19 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/src/index.ts",
+      "preLaunchTask": "tsc: build - tsconfig.json",
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+    },
+    {
       "name": "test.vue",
       "type": "node",
       "request": "launch",
-      "args": ["src/index.ts", "--nuxt", "-c", "./config.js", "./test/test.vue"],
       "runtimeArgs": ["--nolazy","--loader", "ts-node/esm"],
+      "args": ["src/index.ts", "--nuxt", "-c", "./config.js", "./tests/test.vue"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
     },
@@ -18,7 +26,7 @@
       "type": "node",
       "request": "launch",
       "args": ["index.ts", "${relativeFile}"],
-      "runtimeArgs": ["--nolazy", "--loader", "ts-node/esm"],
+      "runtimeArgs": ["--nolazy", "--loader", "ts-node"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
     },

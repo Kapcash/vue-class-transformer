@@ -1,6 +1,6 @@
 import minimist from 'minimist'
 import chalk from 'chalk';
-import { AttributeToken, SFCToken } from '../global.js';
+import { AttributeToken, SFCToken } from 'src/global';
 
 export interface Configuration {
   overrideFiles: boolean;

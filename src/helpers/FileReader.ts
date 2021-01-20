@@ -1,11 +1,9 @@
 import fs from 'fs';
+import { dirname } from "path";
+import mkdirp from 'mkdirp'
 import ts from 'typescript';
-import VueCompiler, { SFCDescriptor } from 'vue-template-compiler'
-
-
-function isVueFile(filePath: string): boolean {
-  return filePath.endsWith('.vue')
-} 
+import * as VueCompiler from 'vue-template-compiler'
+import { SFCDescriptor, SFCBlock } from 'vue-template-compiler'
 
 /** Recursively get all files from the given folder
  * If the given path is a file, it just returns the file
@@ -15,16 +13,15 @@ function isVueFile(filePath: string): boolean {
 function getFilesFromFolder (path = ".") {
   const entries = fs.readdirSync(path, { withFileTypes: true });
 
-  const vueFiles = entries
+  const folderFiles = entries
     .filter(file => !file.isDirectory())
     .map(file => `${path}/${file.name}`)
-    .filter(isVueFile);
   const folders = entries.filter(folder => folder.isDirectory());
 
   for (const folder of folders) {
-    vueFiles.push(...getFilesFromFolder(`${path}/${folder.name}`));
+    folderFiles.push(...getFilesFromFolder(`${path}/${folder.name}`));
   }
-  return vueFiles;
+  return folderFiles;
 }
 
 /** Get all files paths from path and sub-folders */
@@ -34,16 +31,17 @@ function getAllFilesPaths (fileOrFolderPath): string[] {
   if (fs.lstatSync(fileOrFolderPath).isDirectory()) {
     return getFilesFromFolder(fileOrFolderPath)
   } else {
-    if (!isVueFile(fileOrFolderPath)) throw new Error('This is not a .vue file!')
     return [fileOrFolderPath]
   };
 }
 
 export function getAllFilesToUpgrade (path: string): FileDescriptor[] {
   path = `${process.cwd()}/${path}`
-  return getAllFilesPaths(path)
+  const vueFiles = getAllFilesPaths(path)
     .map(path => new FileDescriptor(path))
-    .filter(file => !!file)
+    .filter(file => file.isVueFile)
+  if (vueFiles.length <= 0) { throw new Error("This path doesn't include any .vue file!"); }
+  return vueFiles;
 }
 
 export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
@@ -58,6 +56,32 @@ export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
 
 export function extractScriptFromSfc(sfc: SFCDescriptor): ts.SourceFile {
   return ts.createSourceFile('inline.ts', sfc.script.content, ts.ScriptTarget.ES2020)
+}
+
+export function createFileAndFolders(filePath: string, content: string | NodeJS.ArrayBufferView) {
+  mkdirp.sync(dirname(filePath))
+  fs.writeFileSync(filePath, content)
+}
+
+export function replaceVueScript(filePath: string, outputPath: string, scriptBlock: SFCBlock, scriptString: string) {
+  mkdirp.sync(dirname(filePath))
+  fs.open(filePath, 'r', function(err, fd) {
+    if (err) { throw 'could not open file: ' + err; }
+
+    const stats = fs.fstatSync(fd);
+
+    const beforeSize = scriptBlock.start
+    const beforeBuffer = Buffer.alloc(beforeSize)
+    fs.readSync(fd, beforeBuffer, null, beforeSize, null)
+
+    const afterSize = stats.size - scriptBlock.end
+    const afterBuffer = Buffer.alloc(afterSize)
+    fs.readSync(fd, afterBuffer, null, afterSize, scriptBlock.end)
+
+    const scriptBuffer = Buffer.from(scriptString, 'utf8')
+
+    fs.writeFileSync(outputPath, Buffer.concat([beforeBuffer, scriptBuffer, afterBuffer]), { encoding: 'utf-8' })
+  })
 }
 
 /** A class descripting a file main attributes */

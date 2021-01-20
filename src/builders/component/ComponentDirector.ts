@@ -1,5 +1,5 @@
-import { AttributeToken } from "../../global.js";
-import { ComponentBuilder } from "./ComponentBuilders.js"
+import { AttributeToken } from '../../global';
+import { ComponentBuilder } from './ComponentBuilders';
 
 export default class ComponentDirector {
   private builder: ComponentBuilder

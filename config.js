@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   overrideFiles: false,
   isNuxt: true,
   outputDir: './generated',

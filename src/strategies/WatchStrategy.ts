@@ -1,4 +1,4 @@
-import Strategy from './Strategy.js';
+import Strategy from './Strategy';
 import ts from 'typescript'
 const factory = ts.factory
 

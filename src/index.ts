@@ -1,49 +1,24 @@
-import ts from 'typescript'
-import { getAllFilesToUpgrade, FileDescriptor, getSfcDescriptor, extractScriptFromSfc } from './helpers/FileReader.js';
-import { sourceExtractor } from './extractors/NodeExtractor.js'
-import { parseArguments, printHelp, RuntimeConfiguration } from './helpers/ArgumentParser.js';
-import VueComponentDescriptor from './extractors/VueComponentDescriptor.js'
-import VueSfcBuilder from './builders/sfc/SfcBuilders.js';
-import VuePropertyDecoratorBuilder from './builders/component/ComponentBuilders.js';
-import ComponentDirector from './builders/component/ComponentDirector.js';
-import SfcDirector from './builders/sfc/SfcDirector.js';
+import { getAllFilesToUpgrade, FileDescriptor } from './helpers/FileReader';
+import { parseArguments, printHelp, RuntimeConfiguration } from './helpers/ArgumentParser';
+import { upgradeComponent } from './main'
 
 // ===== MAIN ===== //
 
-let config: RuntimeConfiguration
-try {
-  config = await parseArguments(process.argv.slice(2))
-} catch (err) {
-  if (err === false) {
-    printHelp()
-    process.exit(0)
-  } else {
-    console.error("Failed to parse the input arguments.", err)
-    process.exit(9)
+(async function() {
+  let config: RuntimeConfiguration
+  try {
+    config = await parseArguments(process.argv.slice(2))
+  } catch (err) {
+    if (err === false) {
+      printHelp()
+      process.exit(0)
+    } else {
+      console.error("Failed to parse the input arguments.", err)
+      process.exit(9)
+    }
   }
-}
+  const vueFilesToUpgrade: FileDescriptor[] = getAllFilesToUpgrade(config.inputPath)
+  vueFilesToUpgrade.forEach(upgradeComponent(config))
+})()
 
-// Build related strategies
-const componentBuilder = new VuePropertyDecoratorBuilder(config.isNuxt)
-const director = new ComponentDirector(componentBuilder, config.propertiesOrder)
-
-const vueFilesToUpgrade: FileDescriptor[] = getAllFilesToUpgrade(config.inputPath)
-vueFilesToUpgrade.forEach(upgradeComponent)
-
-/** Transform a Vue SFC to another syntax, defined by a director */
-function upgradeComponent(vueFile: FileDescriptor) {
-  const vueDescriptor = new VueComponentDescriptor()
-
-  const sfc = getSfcDescriptor(vueFile)
-  const tsSource = extractScriptFromSfc(sfc)
-  // For every first level child in the source, we extract all the info we need
-  ts.forEachChild(tsSource, sourceExtractor(vueDescriptor))
-
-  componentBuilder.setDescriptor(vueDescriptor)
-  const sourceScript = director.build()
-
-  const outputPath = config.overrideFiles ? vueFile.fullPath : `${config.outputDir}${vueFile.nameWithExtension}`
-  const sfcBuilder = new VueSfcBuilder(outputPath, sfc, sourceScript)
-  const sfcDirector = new SfcDirector(sfcBuilder, config.sfcOrder)
-  sfcDirector.buildCustomBlockAtEnd()
-}
+// ===================== //
