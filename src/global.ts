@@ -1,3 +1,5 @@
+import { RuntimeConfiguration } from "./helpers/ArgumentParser";
+
 export type SFCToken = 'script' | 'template' | 'styles' | 'other'
 export type AttributeToken = 'data' | 'props' | 'computed' | 'watcher' | 'hooks' | 'methods' | 'other'
 
@@ -7,3 +9,10 @@ export function Alias(parameter: AttributeToken | SFCToken) {
   }
 }
 
+declare global {
+  namespace NodeJS {
+    interface Global {
+      config: RuntimeConfiguration;
+    }
+  }
+}

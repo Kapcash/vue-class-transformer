@@ -14,6 +14,15 @@
       "protocol": "inspector",
     },
     {
+      "name": "Test commands",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": ["--nolazy","--loader", "ts-node/esm"],
+      "args": ["src/index.ts", "-n", "--nuxt", "-o", "lol", "./tests/test.vue"],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector",
+    },
+    {
       "name": "Upgrade current Vue file",
       "type": "node",
       "request": "launch",

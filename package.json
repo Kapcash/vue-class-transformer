@@ -29,7 +29,8 @@
     "minimist": "^1.2.5",
     "mkdirp": "^1.0.4",
     "vue": "^2.6.12",
-    "vue-template-compiler": "^2.6.12"
+    "vue-template-compiler": "^2.6.12",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
