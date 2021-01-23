@@ -15,7 +15,7 @@ export function getAllFilesToUpgrade(inputPaths: string[]): FileDescriptor[] {
 
 /** Extract the Vue SFC descriptor from an input file */
 export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
-  let sourceStr = fs.readFileSync(file.fullPath, 'utf8')
+  const sourceStr = fs.readFileSync(file.fullPath, 'utf8')
   
   if (file.isVueFile) {
     return VueCompiler.parseComponent(sourceStr)
@@ -25,8 +25,24 @@ export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
 }
 
 /** Extract the component script as a typescript AST */
-export function extractScriptFromSfc(sfc: SFCDescriptor): ts.SourceFile {
-  return ts.createSourceFile('inline.ts', sfc.script.content, ts.ScriptTarget.ES2020)
+export function extractScriptFromSfc(vueFile: FileDescriptor) {
+  const sfc = getSfcDescriptor(vueFile)
+  let { content, src, start, end } = sfc.script
+  const tsScriptPath = `${vueFile.path}${src}`
+
+  if (src && !content) {
+    content = fs.readFileSync(`${process.cwd()}/${tsScriptPath}`).toString()
+    start = end = NaN
+  }
+
+  const sourceScript = ts.createSourceFile('inline.ts', content, ts.ScriptTarget.ES2020)
+
+  return {
+    sourceScript,
+    tsScriptPath,
+    start,
+    end,
+  }
 }
 
 /**
@@ -36,19 +52,24 @@ export function extractScriptFromSfc(sfc: SFCDescriptor): ts.SourceFile {
  * @param scriptBlock The Vue SFC block from the input file
  * @param scriptString The new script to write to the output file / replace existing script
  */
-export function replaceVueScript(filePath: string, outputPath: string, scriptBlock: SFCBlock, scriptString: string) {
+export function replaceVueScript(filePath: string, outputPath: string, scriptString: string, scriptStart: number = 0, scriptEnd: number = 0) {
+  scriptStart ||= 0
+  scriptEnd ||= 0
+
   mkdirp.sync(dirname(outputPath))
   const fd = fs.openSync(filePath, 'r')
 
   const stats = fs.fstatSync(fd);
 
-  const beforeSize = scriptBlock.start
+  const beforeSize = scriptStart
   const beforeBuffer = Buffer.alloc(beforeSize)
-  fs.readSync(fd, beforeBuffer, null, beforeSize, null)
+  if (beforeSize) {
+    fs.readSync(fd, beforeBuffer, null, beforeSize, null)
+  }
 
-  const afterSize = stats.size - scriptBlock.end
+  const afterSize = stats.size - scriptEnd
   const afterBuffer = Buffer.alloc(afterSize)
-  fs.readSync(fd, afterBuffer, null, afterSize, scriptBlock.end)
+  fs.readSync(fd, afterBuffer, null, afterSize, scriptEnd)
 
   const scriptBuffer = Buffer.from(scriptString, 'utf8')
 
