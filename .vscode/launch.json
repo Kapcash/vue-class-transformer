@@ -9,7 +9,7 @@
       "type": "node",
       "request": "launch",
       "runtimeArgs": ["--nolazy","--loader", "ts-node/esm"],
-      "args": ["src/index.ts", "./tests/conversion", "./tests/conversion/__snapshots__", "./tests/conversion/__snapshots__/simple.spec.ts.snap", "./tests/conversion/simple.spec.ts", "'./tests/conversion/test copy.vue'", "./tests/conversion/test.vue", "'./tests/test copy 2.vue'", "'./tests/test copy.vue'", "./tests/test.vue"],
+      "args": ["src/index.ts", "./tests/test.vue"],
       "cwd": "${workspaceRoot}",
       "protocol": "inspector",
     },

@@ -13,6 +13,7 @@ export function getAllFilesToUpgrade(inputPaths: string[]): FileDescriptor[] {
   return vueFiles;
 }
 
+/** Extract the Vue SFC descriptor from an input file */
 export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
   let sourceStr = fs.readFileSync(file.fullPath, 'utf8')
   
@@ -23,15 +24,18 @@ export function getSfcDescriptor (file: FileDescriptor): SFCDescriptor | null {
   }
 }
 
+/** Extract the component script as a typescript AST */
 export function extractScriptFromSfc(sfc: SFCDescriptor): ts.SourceFile {
   return ts.createSourceFile('inline.ts', sfc.script.content, ts.ScriptTarget.ES2020)
 }
 
-export function createFileAndFolders(filePath: string, content: string | NodeJS.ArrayBufferView) {
-  mkdirp.sync(dirname(filePath))
-  fs.writeFileSync(filePath, content)
-}
-
+/**
+ * Replace the Vue SFC script by another. Can create a new duplicated file instead of replacing the existing input.
+ * @param filePath The input file path to replace the script
+ * @param outputPath The output file path to write the new file. May be equal to the input path.
+ * @param scriptBlock The Vue SFC block from the input file
+ * @param scriptString The new script to write to the output file / replace existing script
+ */
 export function replaceVueScript(filePath: string, outputPath: string, scriptBlock: SFCBlock, scriptString: string) {
   mkdirp.sync(dirname(outputPath))
   const fd = fs.openSync(filePath, 'r')
