@@ -1,24 +1,24 @@
-import ts from "typescript";
+import ts from 'typescript';
 
 export function isVueExtend(node: ts.Node): boolean {
   if (ts.isPropertyAccessExpression(node)) {
     return ts.isIdentifier(node.expression)
       && node.expression.text === 'Vue'
-      && node.name.text === 'extend'
+      && node.name.text === 'extend';
   }
-  return false
+  return false;
 }
 
 export function getVueOptions(node: ts.ExportAssignment) {
-  return getExportArgument(node)
+  return getExportArgument(node);
 }
 
 function getExportArgument(node: ts.ExportAssignment): ts.Node {
-  let exportArg: ts.Node | null = null
+  let exportArg: ts.Node | null = null;
   if (ts.isCallExpression(node.expression) && isVueExtend(node.expression.expression)) {
-    exportArg = node.expression.arguments[0]
+    exportArg = node.expression.arguments[0];
   } else {
-    exportArg = node.expression
+    exportArg = node.expression;
   }
-  return exportArg
+  return exportArg;
 }

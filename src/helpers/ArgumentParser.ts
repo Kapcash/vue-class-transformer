@@ -1,5 +1,5 @@
-import yargs from 'yargs/yargs'
-import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs/yargs';
+import { hideBin } from 'yargs/helpers';
 import { AttributeToken } from '../global';
 
 export interface Configuration {
@@ -15,60 +15,60 @@ export interface RuntimeConfiguration extends Configuration {
 
 export function parseArguments(): RuntimeConfiguration {
   const argv = yargs(hideBin(process.argv))
-    .scriptName("vst")
+    .scriptName('vst')
     .option('verbose', {
       alias: 'v',
       type: 'boolean',
       default: false,
-      description: 'Run with verbose logging'
+      description: 'Run with verbose logging',
     })
     .option('order', {
       type: 'array',
       default: ['data', 'computed', 'watcher', 'hooks', 'methods', 'other'],
-      description: "Specifies the generated nodes order."
+      description: 'Specifies the generated nodes order.',
     })
     .option('nuxt', {
       alias: 'n',
       type: 'boolean',
       default: false,
-      description: "Imports decorators from 'nuxt-property-decorator' library. Default is 'vue-property-decorator'."
+      description: 'Imports decorators from \'nuxt-property-decorator\' library. Default is \'vue-property-decorator\'.',
     })
     .option('force', {
       alias: 'f',
       type: 'boolean',
       default: false,
-      description: "Writes the new component scripts in place of the actual vue component script."
+      description: 'Writes the new component scripts in place of the actual vue component script.',
     })
     .option('output', {
       alias: 'o',
       type: 'string',
       default: './generated',
-      description: "The folder used to store the converted vue components."
+      description: 'The folder used to store the converted vue components.',
     })
     .example([
       ['$0 tests/test.vue', 'Convert a single vue file'],
       ['$0 -n tests/test.vue', 'Convert a single vue file'],
       ['$0 components/**/*', 'Convert all vue files in the folder'],
     ])
-    .argv
+    .argv;
 
-  const { _: argPath, nuxt, force, output, order } = argv
+  const { _: argPath, nuxt, force, output, order } = argv;
     
-  let options: Configuration = {
+  const options: Configuration = {
     isNuxt: nuxt,
     overrideFiles: force,
     outputDir: output,
     propertiesOrder: order as AttributeToken[],
-  }
+  };
 
-  const inputPaths = argPath as string[]
-  const outputDir = options.outputDir.endsWith('/') ? options.outputDir : `${options.outputDir}/`
+  const inputPaths = argPath as string[];
+  const outputDir = options.outputDir.endsWith('/') ? options.outputDir : `${options.outputDir}/`;
 
   const runtimeConfig: RuntimeConfiguration = {
     ...options,
     outputDir,
     inputPaths,
-  }
+  };
   
   return runtimeConfig;
 }

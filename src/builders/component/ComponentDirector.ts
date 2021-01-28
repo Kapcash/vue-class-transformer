@@ -2,22 +2,22 @@ import { AttributeToken } from '../../global';
 import { ComponentBuilder } from './ComponentBuilders';
 
 export default class ComponentDirector {
-  private builder: ComponentBuilder
-  private attributesOrder: AttributeToken[]
+  private builder: ComponentBuilder;
+  private attributesOrder: AttributeToken[];
   
   constructor(builder: ComponentBuilder, attributesOrder: AttributeToken[]) {
-    this.builder = builder
-    this.attributesOrder = attributesOrder
+    this.builder = builder;
+    this.attributesOrder = attributesOrder;
   }
 
   public build() {
-    this.builder.createImports()
+    this.builder.createImports();
     this.attributesOrder.forEach(fct => {
-      this.builder[fct]?.()
-    })
+      this.builder[fct]?.();
+    });
     return this.builder
       .createClassComponent()
-      .buildSourceScript()
+      .buildSourceScript();
   }
 
   public buildPropertiesFirst() {
@@ -30,7 +30,7 @@ export default class ComponentDirector {
       .createMethods()
       .createLeft()
       .createClassComponent()
-      .buildSourceScript()
+      .buildSourceScript();
   }
 
   public buildDataFirst() {
@@ -43,6 +43,6 @@ export default class ComponentDirector {
       .createMethods()
       .createLeft()
       .createClassComponent()
-      .buildSourceScript()
+      .buildSourceScript();
   }
 }

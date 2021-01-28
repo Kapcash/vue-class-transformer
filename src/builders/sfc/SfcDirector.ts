@@ -7,13 +7,13 @@ export default class SfcDirector {
 
   constructor(builder: SfcBuilder, order: SFCToken[]) {
     this.builder = builder;
-    this.order = order
+    this.order = order;
   }
 
   public build() {
     this.order.forEach(tag => {
-      this.builder[tag]?.()
-    })
+      this.builder[tag]?.();
+    });
   }
 
   public buildCustomBlockAtEnd() {
@@ -21,6 +21,6 @@ export default class SfcDirector {
     this.builder.createScript();
     this.builder.createStyles();
     this.builder.createCustomBlocks();
-    return this.builder.sfc
+    return this.builder.sfc;
   }
 }
