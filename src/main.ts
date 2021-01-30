@@ -14,9 +14,9 @@ export async function upgradeComponent(vueFile: FileDescriptor) {
   const scriptFile = isNaN(start) ? tsScriptDescriptor : vueFile;
   const outputPath = global.config.overrideFiles ? scriptFile.fullPath : `${global.config.outputDir}${scriptFile.nameWithExtension}`;
 
-  // const prettyScript = await lintScript(sourceScript)
+  const prettyScript = await lintScript(sourceScript);
 
-  replaceVueScript(scriptFile.fullPath, outputPath, sourceScript, start, end);
+  replaceVueScript(scriptFile.fullPath, outputPath, prettyScript || sourceScript, start, end);
 }
 
 /** Convert the given SFC descriptor's script */
@@ -40,7 +40,8 @@ export function convertScript(vueFile: FileDescriptor) {
   };
 }
 
-export async function lintScript(sourceScript: string): Promise<string> {
+async function lintScript(sourceScript: string): Promise<string> {
+  // FIXME: Webpack loading the parser doesn't work on production bundle
   const baseConfig: Linter.Config = {
     parser: '@typescript-eslint/parser',
     plugins: [
@@ -51,6 +52,7 @@ export async function lintScript(sourceScript: string): Promise<string> {
   
   const eslint = new ESLint({
     fix: true,
+    useEslintrc: false,
     baseConfig,
   });
 

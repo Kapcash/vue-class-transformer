@@ -1,6 +1,6 @@
 module.exports = {
+  'ignorePatterns': [ '*.js', '*.vue' ],
   'parser': '@typescript-eslint/parser',
-  'eslint.validate': ['typescript'],
   'plugins': [
     '@typescript-eslint',
   ],
