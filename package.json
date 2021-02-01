@@ -1,7 +1,6 @@
 {
   "name": "vue-parser-to-class-component",
   "version": "1.0.0",
-  "main": "dist/index.js",
   "license": "MIT",
   "author": "Florent Catiau-Tristant (Kapcash)",
   "homepage": "https://github.com/Kapcash/vue-typescript-converter#readme",
@@ -12,17 +11,19 @@
     "type": "git",
     "url": "https://github.com/Kapcash/vue-typescript-converter"
   },
+  "main": "dist/out.js",
+  "bin": {
+    "vst": "bin/vst"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "start": "node --loader ts-node/esm src/index.ts",
     "build": "webpack",
     "test": "jest --coverage"
   },
-  "bin": {
-    "vst": "bin/vst"
-  },
-  "files": [
-    "dist"
-  ],
   "dependencies": {
     "@nuxtjs/eslint-config-typescript": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^4.14.0",
@@ -41,6 +42,7 @@
     "@types/jest": "^26.0.19",
     "@types/node": "^14.14.11",
     "babel-jest": "^26.6.3",
+    "copy-webpack-plugin": "^7.0.0",
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
     "ts-loader": "^8.0.14",
