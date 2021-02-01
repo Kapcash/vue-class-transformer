@@ -41,7 +41,7 @@ export function convertScript(vueFile: FileDescriptor) {
 }
 
 async function lintScript(sourceScript: string): Promise<string> {
-  // FIXME: Webpack loading the parser doesn't work on production bundle
+  // FIXME: Webpack loading the parser doesn't work on production bundle (including all compiled node_modules, not as external)
   const baseConfig: Linter.Config = {
     parser: '@typescript-eslint/parser',
     plugins: [
