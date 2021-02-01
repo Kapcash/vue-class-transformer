@@ -72,7 +72,7 @@ export function replaceVueScript(filePath: string, outputPath: string, scriptStr
   const afterBuffer = Buffer.alloc(afterSize);
   fs.readSync(fd, afterBuffer, null, afterSize, scriptEnd);
 
-  const scriptBuffer = Buffer.from(scriptString, 'utf8');
+  const scriptBuffer = Buffer.from('\n' + scriptString, 'utf8');
 
   fs.writeFileSync(outputPath, Buffer.concat([beforeBuffer, scriptBuffer, afterBuffer]), { encoding: 'utf-8' });
 }
