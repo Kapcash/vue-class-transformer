@@ -15,7 +15,7 @@ export interface RuntimeConfiguration extends Configuration {
 
 export function parseArguments(): RuntimeConfiguration {
   const argv = yargs(hideBin(process.argv))
-    .scriptName('vst')
+    .scriptName('vct')
     .option('verbose', {
       alias: 'v',
       type: 'boolean',

@@ -1,5 +1,5 @@
 {
-  "name": "vue-parser-to-class-component",
+  "name": "vue-class-transformer",
   "version": "1.0.0",
   "license": "MIT",
   "author": "Florent Catiau-Tristant (Kapcash)",
@@ -13,7 +13,7 @@
   },
   "main": "dist/out.js",
   "bin": {
-    "vst": "bin/vst"
+    "vct": "bin/vct"
   },
   "files": [
     "bin",
