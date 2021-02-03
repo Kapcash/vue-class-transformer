@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import ts, { NodeArray } from 'typescript';
 import VueComponentDescriptor from './VueComponentDescriptor';
 import { getVueOptions } from './SourceExtractor';
 
@@ -80,14 +80,15 @@ function extractComputed(node: ts.ObjectLiteralElement): ts.ObjectLiteralElement
   console.error('Unable to extract properties from "methods"!');
 }
 
-function extractData (node: ts.ObjectLiteralElement) {
+function extractData (node: ts.ObjectLiteralElement): ts.NodeArray<ts.PropertyAssignment | ts.VariableDeclaration> {
   if (ts.isMethodDeclaration(node)) {
     const assigments: ts.Node[] = node.body.statements.filter(ts.isVariableStatement).map(assign => assign.declarationList.declarations).flat();
     const returnStmt = node.body.statements.find(ts.isReturnStatement);
     if (ts.isObjectLiteralExpression(returnStmt.expression)) {
-      assigments.push(...returnStmt.expression.properties.filter(statement => !ts.isShorthandPropertyAssignment(statement)));
+      const initializedProperties = returnStmt.expression.properties.filter(statement => !ts.isShorthandPropertyAssignment(statement));
+      assigments.push(...initializedProperties);
     }
-    return ts.createNodeArray(assigments.filter(ts.isVariableDeclaration));
+    return ts.createNodeArray(assigments.filter(node => ts.isVariableDeclaration(node) || ts.isPropertyAssignment(node))) as ts.NodeArray<ts.PropertyAssignment | ts.VariableDeclaration>;
   }
   console.error('Unable to extract properties from "data"!');
 }

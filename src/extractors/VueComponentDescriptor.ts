@@ -4,7 +4,7 @@ const factory = ts.factory;
 export default class VueComponentDescriptor  {
   imports: ts.ImportDeclaration[] = [];
   name = '';
-  data: ts.NodeArray<ts.VariableDeclaration>;
+  data: ts.NodeArray<ts.VariableDeclaration | ts.PropertyAssignment>;
   components: ts.ObjectLiteralElementLike[] = [];
   mixins: ts.ObjectLiteralElementLike[] = [];
   directives: ts.ObjectLiteralElementLike[] = [];
@@ -29,7 +29,7 @@ export default class VueComponentDescriptor  {
     if (newName) this.name = newName;
   }
 
-  setData(data?: ts.NodeArray<ts.VariableDeclaration>) {
+  setData(data?: ts.NodeArray<ts.VariableDeclaration | ts.PropertyAssignment>) {
     if (data) this.data = data;
   }
 

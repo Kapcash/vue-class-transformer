@@ -24,7 +24,7 @@ export function parseArguments(): RuntimeConfiguration {
     })
     .option('order', {
       type: 'array',
-      default: ['data', 'computed', 'watcher', 'hooks', 'methods', 'other'],
+      default: ['data', 'props', 'computed', 'watcher', 'hooks', 'methods', 'other'],
       description: 'Specifies the generated nodes order. Usage: "--order data computed watcher hooks methods other -- mycomponent.vue"',
     })
     .option('nuxt', {
