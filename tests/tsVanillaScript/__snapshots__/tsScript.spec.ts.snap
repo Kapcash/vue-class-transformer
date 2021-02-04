@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`auth should resolve with true and valid userId for hardcoded token 1`] = `
+"import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
+import { TextField } from \\"~/components/test-field.vue\\";
+@Component<MyComponent>({ components: { TextField } })
+export default class MyComponent extends Vue {
+    loading: boolean = true;
+    isOpen = false;
+    query = \\"\\";
+    @Prop({
+        type: Boolean, required: false, default: false
+    })
+    readonly loading!: Boolean;
+    @Prop({
+        type: String, required: true
+    })
+    readonly userId!: String;
+    @Watch('loading')
+    onLoadingUpdate(newVal: boolean, oldVal: boolean) {
+        console.log(newVal);
+    }
+    close(): void {
+        this.isOpen = false;
+    }
+    get hasQuery(): boolean {
+        return !!this.query;
+    }
+    created() {
+        console.log(\\"I'm aliiiive!\\");
+    }
+}
+"
+`;

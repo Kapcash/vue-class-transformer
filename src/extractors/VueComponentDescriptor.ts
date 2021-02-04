@@ -4,7 +4,7 @@ const factory = ts.factory;
 export default class VueComponentDescriptor  {
   imports: ts.ImportDeclaration[] = [];
   name = '';
-  data: ts.NodeArray<ts.VariableDeclaration | ts.PropertyAssignment>;
+  data: Array<ts.VariableDeclaration | ts.PropertyAssignment> = [];
   components: ts.ObjectLiteralElementLike[] = [];
   mixins: ts.ObjectLiteralElementLike[] = [];
   directives: ts.ObjectLiteralElementLike[] = [];
@@ -13,6 +13,7 @@ export default class VueComponentDescriptor  {
   props: ts.PropertyAssignment[] = [];
   methods: ts.MethodDeclaration[] = [];
   otherToken: ts.ObjectLiteralElementLike[] = [];
+  customOptions: ts.PropertyAssignment[] = [];
 
   addImport(importNode: ts.ImportDeclaration) {
     if (ts.isStringLiteral(importNode.moduleSpecifier) && (importNode.moduleSpecifier.text === 'nuxt-property-decorator')) {
@@ -29,7 +30,7 @@ export default class VueComponentDescriptor  {
     if (newName) this.name = newName;
   }
 
-  setData(data?: ts.NodeArray<ts.VariableDeclaration | ts.PropertyAssignment>) {
+  setData(data?: Array<ts.VariableDeclaration | ts.PropertyAssignment>) {
     if (data) this.data = data;
   }
 
@@ -46,7 +47,11 @@ export default class VueComponentDescriptor  {
   }
 
   addOtherToken(token?: ts.ObjectLiteralElementLike) {
-    if (token) this.otherToken = [...this.otherToken, token];
+    if (token) this.otherToken.push(token);
+  }
+
+  addCustomOptions(...tokens: ts.PropertyDeclaration[]) {
+    if (tokens) this.customOptions.push(...tokens.map((tkn) => factory.createPropertyAssignment(tkn.name, tkn.initializer)));
   }
 
   setComponents(components?: ts.ObjectLiteralElementLike[]) {
@@ -76,6 +81,9 @@ export default class VueComponentDescriptor  {
     }
     if (this.directives.length > 0) {
       assignments.push(ts.createPropertyAssignment('directives', ts.createObjectLiteral(this.directives)));
+    }
+    if (this.customOptions.length > 0) {
+      assignments.push(...this.customOptions);
     }
     const objParameters = assignments.length > 0 ? factory.createObjectLiteralExpression(assignments) : null;
       

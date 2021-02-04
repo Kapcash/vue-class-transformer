@@ -9,10 +9,25 @@ export function Alias(parameter: AttributeToken | SFCToken) {
   };
 }
 
+Array.prototype.chunk = function(statement) {
+  return this.reduce(
+    ([validChunk, invalidChunk], value) => {
+      const targetChunk = statement(value) ? validChunk : invalidChunk;
+      targetChunk.push(value);
+      return [validChunk, invalidChunk];
+    },
+    [[], []]
+  );
+};
+
 declare global {
   namespace NodeJS {
     interface Global {
       config: RuntimeConfiguration;
     }
+  }
+
+  interface Array<T> {
+    chunk(statement: (val: T) => boolean): [Array<T>, Array<T>];
   }
 }

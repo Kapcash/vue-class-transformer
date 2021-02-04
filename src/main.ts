@@ -27,8 +27,7 @@ export function convertScript(vueFile: FileDescriptor) {
   // For every first level child in the source, we extract all the info we need
   ts.forEachChild(sourceScript, sourceExtractor(vueDescriptor));
   
-  const componentBuilder = new VuePropertyDecoratorBuilder(global.config.isNuxt);
-  componentBuilder.setDescriptor(vueDescriptor);
+  const componentBuilder = new VuePropertyDecoratorBuilder(vueDescriptor, global.config.isNuxt);
   const director = new ComponentDirector(componentBuilder, global.config.propertiesOrder);
   const newScript = director.build();
 

@@ -80,7 +80,7 @@ function extractComputed(node: ts.ObjectLiteralElement): ts.ObjectLiteralElement
   console.error('Unable to extract properties from "methods"!');
 }
 
-function extractData (node: ts.ObjectLiteralElement): ts.NodeArray<ts.PropertyAssignment | ts.VariableDeclaration> {
+function extractData (node: ts.ObjectLiteralElement): Array<ts.PropertyAssignment | ts.VariableDeclaration> {
   if (ts.isMethodDeclaration(node)) {
     const assigments: ts.Node[] = node.body.statements.filter(ts.isVariableStatement).map(assign => assign.declarationList.declarations).flat();
     const returnStmt = node.body.statements.find(ts.isReturnStatement);
@@ -88,7 +88,7 @@ function extractData (node: ts.ObjectLiteralElement): ts.NodeArray<ts.PropertyAs
       const initializedProperties = returnStmt.expression.properties.filter(statement => !ts.isShorthandPropertyAssignment(statement));
       assigments.push(...initializedProperties);
     }
-    return ts.createNodeArray(assigments.filter(node => ts.isVariableDeclaration(node) || ts.isPropertyAssignment(node))) as ts.NodeArray<ts.PropertyAssignment | ts.VariableDeclaration>;
+    return assigments.filter(node => ts.isVariableDeclaration(node) || ts.isPropertyAssignment(node)) as Array<ts.PropertyAssignment | ts.VariableDeclaration>;
   }
   console.error('Unable to extract properties from "data"!');
 }

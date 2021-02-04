@@ -1,0 +1,96 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Simple conversions Convert a simple Vue SFC 1`] = `
+"import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
+import { TextField } from \\"~/components/test-field.vue\\";
+@Component<MyComponent>({ components: { TextField } })
+export default class MyComponent extends Vue {
+    loading = true;
+    isOpen = false;
+    query = \\"\\";
+    @Prop({
+        type: Boolean, required: false, default: false
+    })
+    readonly loading!: Boolean;
+    @Prop({
+        type: String, required: true
+    })
+    readonly userId!: String;
+    @Watch('loading')
+    onLoadingUpdate(newVal, oldVal) {
+        console.log(newVal);
+    }
+    close() {
+        this.isOpen = false;
+    }
+    get hasQuery() {
+        return !!this.query;
+    }
+    created() {
+        this.watcher = this.$store.watch(() => this.$store.state.modals.isResetPasswordActive, (newVal) => {
+            this.isOpen = newVal;
+        });
+    }
+}
+"
+`;
+
+exports[`Simple conversions Convert an empty Vue SFC 1`] = `
+"import { Vue, Component } from 'vue-property-decorator';
+import { TextField } from \\"~/components/test-field.vue\\";
+@Component
+export default class EmptyComponent extends Vue {
+}
+"
+`;
+
+exports[`Simple conversions Do not remove eventual custom options in SFC 1`] = `
+"import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
+import { TextField } from \\"~/components/test-field.vue\\";
+@Component<MyComponent>({ components: { TextField }, i18n: {
+        lang: \\"en\\"
+    } })
+export default class MyComponent extends Vue {
+    loading = true;
+    isOpen = false;
+    query = \\"\\";
+    @Prop({
+        type: Boolean, required: false, default: false
+    })
+    readonly loading!: Boolean;
+    @Prop({
+        type: String, required: true
+    })
+    readonly userId!: String;
+    @Watch('loading')
+    onLoadingUpdate(newVal, oldVal) {
+        console.log(newVal);
+    }
+    close() {
+        this.isOpen = false;
+    }
+    get hasQuery(): boolean {
+        return !!this.query;
+    }
+    created() {
+        this.watcher = this.$store.watch(() => this.$store.state.modals.isResetPasswordActive, (newVal) => {
+            this.isOpen = newVal;
+        });
+    }
+}
+"
+`;
+
+exports[`Simple conversions Transform both getters and setters in computed 1`] = `
+"import { Vue, Component } from 'vue-property-decorator';
+@Component
+export default class  extends Vue {
+    get currentValue(): string {
+        return this.$store.state.title;
+    }
+    set currentValue(val: string) {
+        this.$store.commit(\\"SET_TITLE\\", val);
+    }
+}
+"
+`;

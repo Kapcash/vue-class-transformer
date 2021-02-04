@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`auth should resolve with true and valid userId for hardcoded token 1`] = `
+"import { Vue, Component } from 'vue-property-decorator';
+@Component
+export default class  extends Vue {
+    isOpen = false;
+    created() {
+        console.log(\\"I'm aliiiiiiive! \\\\\\\\o/\\");
+    }
+}
+"
+`;

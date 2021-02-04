@@ -32,7 +32,7 @@ export function extractScriptFromSfc(vueFile: FileDescriptor) {
   const tsScriptPath = `${vueFile.path}${src}`;
 
   if (src && !content) {
-    content = fs.readFileSync(`${process.cwd()}/${tsScriptPath}`).toString();
+    content = fs.readFileSync(tsScriptPath).toString();
     start = end = NaN;
   }
 

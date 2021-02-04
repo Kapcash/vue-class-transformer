@@ -11,9 +11,11 @@ import ImportStrategy from '../../strategies/ImportStrategy';
 import { Alias } from '../../global';
 
 export abstract class ComponentBuilder {
+  protected componentDescriptor: VueComponentDescriptor | null = null;
   protected libraryName = '';
 
-  constructor(isNuxt = false) {
+  constructor(vueDescriptor: VueComponentDescriptor, isNuxt = false) {
+    this.componentDescriptor = vueDescriptor;
     this.libraryName = `${isNuxt ? 'nuxt' : 'vue'}-property-decorator`;
   }
 
@@ -30,21 +32,10 @@ export abstract class ComponentBuilder {
 }
 
 export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
-  private _componentDescriptor: VueComponentDescriptor | null = null;
   private classMembers: ts.ClassElement[] = [];
   private sourceStatements: ts.Statement[] = [];
-
-  private getComponentDescriptor(): VueComponentDescriptor {
-    if (!this._componentDescriptor) throw new Error('Not VueComponentDescriptor set, we can\'t build anything without!');
-    return this._componentDescriptor;
-  }
-
-  setDescriptor(descriptor: VueComponentDescriptor) {
-    this._componentDescriptor = descriptor;
-  }
-  
   createImports() {
-    const { imports } = this.getComponentDescriptor();
+    const { imports } = this.componentDescriptor;
     
     const filteredImports = imports.map(imprt => {
       return new ImportStrategy().transform(imprt);
@@ -55,7 +46,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
   }
 
   get newImportDeclaration () {
-    const { watchers, props } = this.getComponentDescriptor();
+    const { watchers, props } = this.componentDescriptor;
 
     const decoratorImports: ts.ImportSpecifier[] = [
       factory.createImportSpecifier(undefined, factory.createIdentifier('Vue')),
@@ -75,7 +66,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
   
   @Alias('props')
   createProperties() {
-    const props = this.getComponentDescriptor().props;
+    const props = this.componentDescriptor.props;
     const newProps = props.map(prop => {
       return new PropertyStrategy().transform(prop);
     }).flat();
@@ -90,7 +81,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
   
   @Alias('data')
   createData() {
-    const newData = this.getComponentDescriptor().data.map((data) => {
+    const newData = this.componentDescriptor.data.map((data) => {
       return new DataStrategy().transform(data);
     });
     this.classMembers.push(...newData);
@@ -99,7 +90,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
 
   @Alias('computed')
   createComputed() {
-    const computed = this.getComponentDescriptor().getters.map(computed => {
+    const computed = this.componentDescriptor.getters.map(computed => {
       return new ComputedStrategy().transform(computed);
     }).flat();
     this.classMembers.push(...computed);
@@ -108,7 +99,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
 
   @Alias('methods')
   createMethods() {
-    const methods = this.getComponentDescriptor().methods.map(method => {
+    const methods = this.componentDescriptor.methods.map(method => {
       return new MethodStrategy().transform(method);
     });
     this.classMembers.push(...methods);
@@ -117,7 +108,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
 
   @Alias('watcher')
   createWatchers() {
-    const watchers = this.getComponentDescriptor().watchers.map((watcher) => {
+    const watchers = this.componentDescriptor.watchers.map((watcher) => {
       return new WatchStrategy().transform(watcher);
     });
     this.classMembers.push(...watchers);
@@ -126,10 +117,13 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
 
   @Alias('other')
   createLeft() {
-    const otherTokens = this.getComponentDescriptor().otherToken.map(token => {
+    const otherTokens = this.componentDescriptor.otherToken.map(token => {
       return new OtherTokenStrategy().transform(token);
     });
-    this.classMembers.push(...otherTokens.filter(ts.isMethodDeclaration));
+    const [classMembersLike, notClassMemberLike] = otherTokens.chunk(ts.isMethodDeclaration) as [ts.MethodDeclaration[], ts.PropertyDeclaration[]];
+    this.classMembers.push(...classMembersLike);
+    this.componentDescriptor.addCustomOptions(...notClassMemberLike);
+
     // const otherProperties: ts.PropertyDeclaration[] = otherTokens
     //   .filter(ts.isPropertyAssignment)
     //   .map(prop => factory.createPropertyDeclaration([], prop.modifiers, prop.name, prop.questionToken, undefined, prop.initializer))
@@ -138,7 +132,7 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
   }
 
   createClassComponent() {
-    const newClass = ts.createClassDeclaration([this.decorator], factory.createModifiersFromModifierFlags(ts.ModifierFlags.ExportDefault), this.getComponentDescriptor().capitalizedName, undefined, [this.heritageClause], this.classMembers.flat());
+    const newClass = ts.createClassDeclaration([this.decorator], factory.createModifiersFromModifierFlags(ts.ModifierFlags.ExportDefault), this.componentDescriptor.capitalizedName, undefined, [this.heritageClause], this.classMembers.flat());
     this.sourceStatements.push(newClass);
     return this;
   }
@@ -151,9 +145,9 @@ export default class VuePropertyDecoratorBuilder extends ComponentBuilder {
 
   get decorator() {
     let callDecorator: ts.Identifier | ts.Expression = factory.createIdentifier('Component');
-    if(this.getComponentDescriptor().componentOptions.length > 0) {
-      const classType = factory.createTypeReferenceNode(this.getComponentDescriptor().capitalizedName, []);
-      callDecorator = factory.createCallExpression(callDecorator, [classType], this.getComponentDescriptor().componentOptions);
+    if(this.componentDescriptor.componentOptions.length > 0) {
+      const classType = factory.createTypeReferenceNode(this.componentDescriptor.capitalizedName, []);
+      callDecorator = factory.createCallExpression(callDecorator, [classType], this.componentDescriptor.componentOptions);
     }
     return factory.createDecorator(callDecorator);
   }
