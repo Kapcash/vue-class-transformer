@@ -24,12 +24,17 @@ export function convertScript(vueFile: FileDescriptor) {
   const { sourceScript, tsScriptPath, start, end } = extractScriptFromSfc(vueFile);
   
   const vueDescriptor = new VueComponentDescriptor();
-  // For every first level child in the source, we extract all the info we need
-  ts.forEachChild(sourceScript, sourceExtractor(vueDescriptor));
+  let newScript: ts.SourceFile | null = null;
+  try {
+    // For every first level child in the source, we extract all the info we need
+    ts.forEachChild(sourceScript, sourceExtractor(vueDescriptor));
   
-  const componentBuilder = new VuePropertyDecoratorBuilder(vueDescriptor, global.config.isNuxt);
-  const director = new ComponentDirector(componentBuilder, global.config.propertiesOrder);
-  const newScript = director.build();
+    const componentBuilder = new VuePropertyDecoratorBuilder(vueDescriptor, global.config.isNuxt);
+    const director = new ComponentDirector(componentBuilder, global.config.propertiesOrder);
+    newScript = director.build();
+  } catch (err) {
+    global.errors.addError(vueFile.fullPath, err);
+  }
 
   return {
     sourceScript: ts.createPrinter().printFile(newScript),
@@ -58,4 +63,29 @@ async function lintScript(sourceScript: string): Promise<string> {
   const lintedScript = await eslint.lintText(sourceScript);
 
   return lintedScript[0].output;
+}
+
+export function printFinalErrors (totalStepsNb: number) {
+  const nbOfFails = global.errors.errorMap.size;
+  const nbOfSuccess = totalStepsNb - nbOfFails;
+
+  if (nbOfSuccess > 0) {
+    console.log(`${nbOfSuccess} components have successfully been transformed!`);
+  }
+
+  if (nbOfFails > 0) {
+    console.error(`
+  Oops! :(
+  ${nbOfFails} files have encountered an error while transforming. Very sorry for that!
+
+  > Please open a github issue with the error given, and a reproduction case (the entire component if you can, or at least something that cause the same error).
+  > I will try to provide you an answer as soon as possible!
+  `);
+    
+    console.error(`
+  Here are the detailed errors:
+
+  ${global.errors.toString()}
+  `);
+  }
 }

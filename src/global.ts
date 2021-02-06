@@ -1,4 +1,5 @@
 import { RuntimeConfiguration } from './helpers/ArgumentParser';
+import { ErrorManager } from './helpers/ErrorManager';
 
 export type SFCToken = 'script' | 'template' | 'styles' | 'other';
 export type AttributeToken = 'data' | 'props' | 'computed' | 'watcher' | 'hooks' | 'methods' | 'other';
@@ -24,6 +25,7 @@ declare global {
   namespace NodeJS {
     interface Global {
       config: RuntimeConfiguration;
+      errors: ErrorManager;
     }
   }
 

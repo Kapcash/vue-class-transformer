@@ -2,8 +2,10 @@ import Strategy from './Strategy';
 import ts from 'typescript';
 const factory = ts.factory;
 
-export default class PropertyStrategy implements Strategy {
-  transform (prop: ts.PropertyAssignment): ts.PropertyDeclaration | null {
+export default class PropertyStrategy extends Strategy<ts.PropertyDeclaration> {
+  name = 'props';
+  
+  _transformNode (prop: ts.PropertyAssignment) {
     const propName = ts.isIdentifier(prop.name) ? prop.name.text : '';
 
     let typeIdentifier: ts.TypeNode = undefined;

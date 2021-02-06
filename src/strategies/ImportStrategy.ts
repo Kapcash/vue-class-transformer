@@ -2,12 +2,14 @@ import Strategy from './Strategy';
 import ts from 'typescript';
 const factory = ts.factory;
 
-export default class ImportStrategy implements Strategy {
+export default class ImportStrategy extends Strategy<ts.ImportDeclaration> {
+  name = 'imports';
+
   private isVueIdentifier(nameNode: ts.Node): boolean {
     return nameNode && ts.isIdentifier(nameNode) && nameNode.text === 'Vue';
   }
 
-  transform (importStatement: ts.ImportDeclaration): ts.ImportDeclaration | null {
+  _transformNode (importStatement: ts.ImportDeclaration) {
     let updatedStatement = false;
     const clause = importStatement.importClause;
 
