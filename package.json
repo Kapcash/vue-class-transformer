@@ -7,7 +7,15 @@
   "bugs": {
     "url": "https://github.com/Kapcash/vue-typescript-converter/issues"
   },
-  "keywords": ["vue", "class", "typescript", "ast", "transformer", "vue-property-decorator", "cli"],
+  "keywords": [
+    "vue",
+    "class",
+    "typescript",
+    "ast",
+    "transformer",
+    "vue-property-decorator",
+    "cli"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Kapcash/vue-typescript-converter"
@@ -26,16 +34,16 @@
     "test": "jest --coverage"
   },
   "dependencies": {
-    "typescript": "^4.1.3",
-    "vue-template-compiler": "^2.6.12",
-    "mkdirp": "^1.0.4",
-    "vue": "^2.6.12",
-    "yargs": "^16.2.0",
-    "cli-progress": "^3.8.2",
-    "eslint": "^7.18.0",
     "@nuxtjs/eslint-config-typescript": "^5.0.0",
     "@typescript-eslint/eslint-plugin": "^4.14.0",
-    "@typescript-eslint/parser": "^4.14.0"
+    "@typescript-eslint/parser": "^4.14.0",
+    "cli-progress": "^3.8.2",
+    "eslint": "^7.18.0",
+    "mkdirp": "^1.0.4",
+    "typescript": "^4.1.3",
+    "vue": "^2.6.12",
+    "vue-template-compiler": "^2.6.12",
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
