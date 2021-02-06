@@ -7,6 +7,7 @@
   "bugs": {
     "url": "https://github.com/Kapcash/vue-typescript-converter/issues"
   },
+  "keywords": ["vue", "class", "typescript", "ast", "transformer", "vue-property-decorator", "cli"],
   "repository": {
     "type": "git",
     "url": "https://github.com/Kapcash/vue-typescript-converter"
