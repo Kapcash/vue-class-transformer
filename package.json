@@ -7,6 +7,7 @@
   "bugs": {
     "url": "https://github.com/Kapcash/vue-typescript-converter/issues"
   },
+  "description": "CLI to transform your vanilla Vue.js components to a Typescript class based syntax.",
   "keywords": [
     "vue",
     "class",
