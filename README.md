@@ -1,52 +1,43 @@
 
-Vue Class Transformer is a Nodejs CLI that transform your Vanilla Vue.js components to Typescript class based components.
-
-> This project is still under development and is really likely to raise errors on usages.
-
-> I'm a humble developer just like you, not a genius / robot.  
-> If you like the idea, feel free to help me by opening detailed issues or even Pull Requests!
+Vue Class Transformer is a Nodejs CLI that transform your Vanilla Vue.js components to Typescript class based components,   
+following the syntax provided by the awesome [vue-property-decorator](https://github.com/kaorun343/vue-property-decorator) library.
 
 Table of content
-- [How to use it?](#how-to-use-it)
-  - [Prerequisites](#prerequisites)
-  - [Simple Usage](#simple-usage)
-- [The concept](#the-concept)
+- [Usage](#usage)
+  - [Disclaimer](#disclaimer)
+- [Documentation](#documentation)
+  - [Select components](#select-components)
   - [CLI Options](#cli-options)
-  - [Examples](#examples)
+  - [Examples with options](#examples-with-options)
   - [Roadmap (Fancy Todos)](#roadmap-fancy-todos)
 
-# How to use it?
+# Usage
 
 Install it globally using npm or yarn
 
 ```bash
-  npm install -g vue-class-transformer
-
-  yarn global add vue-class-transformer
+# With npm
+$ npm install -g vue-class-transformer
+# With Yarn
+$ yarn global add vue-class-transformer
 ```
-
-## Prerequisites
-You only need Nodejs 12+ installed.
-
-## Simple Usage
-
-Then, you should have access to the cli:
 
 ```bash
-  # Transform a single component
-  vct ./components/index.vue
-
-  # Transform multiple components
-  vct ./components/**/*.vue
+# You should have access to the `vct` command
+$ vct components/my-component.vue
 ```
 
-# The concept
+<table>
+<tr><th> components/my-component.vue </th><th> generated/my-component.vue </th></tr>
+<tr><td>
 
-The goal is to converts this vanilla Vue.js component
+```html
+<template>
+  <h1>Hello world</h1>
+</template>
 
-```javascript
+<script>
 import Vue from 'vue'
-import { TextField } from '~/components/test-field.vue'
 
 export default Vue.extend({
   name: 'MyComponent',
@@ -60,18 +51,8 @@ export default Vue.extend({
   props: {
     loading: {
       type: Boolean,
-      required: false,
       default: false,
-    },
-    userId: {
-      type: String,
-      required: true,
     }
-  },
-  watch: {
-    loading: function(newVal, oldVal) {
-      console.log(newVal)
-    },
   },
   computed: {
     hasQuery: {
@@ -80,10 +61,10 @@ export default Vue.extend({
       }
     }
   },
-  created () {
-    this.watcher = this.$store.watch(() => this.$store.state.modals.isResetPasswordActive, (newVal) => {
-      this.isOpen = newVal
-    })
+  watch: {
+    loading: function(newVal, oldVal) {
+      console.log(newVal)
+    },
   },
   methods: {
     close () {
@@ -91,38 +72,73 @@ export default Vue.extend({
     }
   }
 })
+</script>
 ```
 
-to this class based Typescript component:
+</td><td>
 
-```typescript
+```html
+<template>
+  <h1>Hello world</h1>
+</template>
+
+<script lang="ts">
 import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
 import { TextField } from "~/components/test-field.vue";
 
-@Component<MyComponent>({ components: { TextField } })
+@Component<MyComponent>({
+  components: { TextField },
+})
 export default class MyComponent extends Vue {
-    get hasQuery(): boolean {
-        return !!this.query;
-    }
+  isOpen = false
+  query = ''
 
-    @Watch('loading')
-    onLoadingUpdate(newVal, oldVal) {
-        console.log(newVal);
-    }
+  get hasQuery(): boolean {
+    return !!this.query;
+  }
 
-    close() {
-        this.isOpen = false;
-    }
+  @Prop({ type: Boolean, default: false })
+  loading!: boolean;
 
-    created() {
-        this.watcher = this.$store.watch(() => this.$store.state.modals.isResetPasswordActive, (newVal) => {
-            this.isOpen = newVal;
-        });
-    }
+  @Watch('loading')
+  onLoadingUpdate(newVal, oldVal) {
+    console.log(newVal);
+  }
+
+  close() {
+    this.isOpen = false;
+  }
 }
+</script>
 ```
 
-It supposes you'll use the library `vue-property-decorator` (_or its nuxt variant `nuxt-property-decorator`_)
+</td></tr>
+</table>
+
+## Disclaimer
+
+> This project is still under development and is likely to raise errors on usages.
+> Feel free to open a GitHub issue for any bug encountered!
+
+> I'm a humble developer just like you, not a genius / robot.  
+> Any help or feedback is more than welcome :)
+
+# Documentation
+
+The Typescript transformation supposes you will use the library `vue-property-decorator` (_or its nuxt variant `nuxt-property-decorator`_).
+
+## Select components
+
+You should only select .vue files.  
+It will work even if your SFC imports an external script like so: `<script src="./index.js" />`
+
+```bash
+  # Transform a single component
+  vct ./components/index.vue
+
+  # Select all .vue files under the components/ folder (deep search).
+  vct ./components/**/*.vue
+```
 
 ## CLI Options
 
@@ -133,9 +149,9 @@ It supposes you'll use the library `vue-property-decorator` (_or its nuxt varian
 | force | -f |  false | Transform the script in place, do not create a new file |
 | output | -o | ./generated | Specify the transformed components output folder |
 | verbose | -v | false | Trigger verbose mode. Display script details. |
-| order | | data computed watcher hooks methods other | Specify the order of the component properties on the transformed script |
+| order | | "data props computed watcher hooks methods other" | Specify the order of the component properties on the transformed script.<br>Currently, if you omit one of the section, it won't be present on the converted component script. |
 
-## Examples
+## Examples with options
 
 ```bash
   # Use the nuxt library and write the transformed components in a new transformed/ folder.
@@ -149,5 +165,4 @@ It supposes you'll use the library `vue-property-decorator` (_or its nuxt varian
 
 ## Roadmap (Fancy Todos)
   - !!! Add more unit tests (edge cases, normal cases, typescript vanilla syntax etc.)
-  - !! List all errored components at the end
   - !! Keep directory tree for output files (don't create everything under generated/ or same name files will override themselves)
