@@ -3,9 +3,9 @@
   "version": "1.0.2",
   "license": "MIT",
   "author": "Florent Catiau-Tristant (Kapcash)",
-  "homepage": "https://github.com/Kapcash/vue-typescript-converter#readme",
+  "homepage": "https://github.com/Kapcash/vue-class-transformer#readme",
   "bugs": {
-    "url": "https://github.com/Kapcash/vue-typescript-converter/issues"
+    "url": "https://github.com/Kapcash/vue-class-transformer/issues"
   },
   "description": "CLI to transform your vanilla Vue.js components to a Typescript class based syntax.",
   "keywords": [
@@ -19,7 +19,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kapcash/vue-typescript-converter"
+    "url": "https://github.com/Kapcash/vue-class-transformer"
   },
   "main": "dist/out.js",
   "bin": {
